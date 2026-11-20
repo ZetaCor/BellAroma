@@ -1,665 +1,210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
-    <meta
-      name="robots"
-      content="noindex"
-    />
-    <title>Panel · Bell Aroma</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;700&family=Jost:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --bg: #f5f0f7;
-        --card: #fff;
-        --ink: #2a1840;
-        --muted: #645478;
-        --line: #dccfe5;
-        --rose: #a63c63;
-        --serif: 'Bodoni Moda', Georgia, serif;
-        --sans: 'Jost', system-ui, sans-serif;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--ink);
-        font-family: var(--sans);
-        line-height: 1.5;
-      }
-      .wrap {
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 1.2rem;
-      }
-      h1,
-      h2 {
-        font-family: var(--serif);
-        font-weight: 500;
-        margin: 0 0 0.8rem;
-      }
-      h1 {
-        font-size: 1.8rem;
-      }
-      h2 {
-        font-size: 1.35rem;
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 1.3rem;
-        margin-bottom: 1.2rem;
-      }
-      label {
-        display: block;
-        font-size: 0.9rem;
-        color: var(--muted);
-        margin: 0.8rem 0 0.25rem;
-      }
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: 0.65rem 0.8rem;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        font: inherit;
-        background: #fff;
-        color: var(--ink);
-      }
-      textarea {
-        min-height: 80px;
-        resize: vertical;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.8rem;
-      }
-      .chk {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        color: var(--ink);
-      }
-      .chk input {
-        width: auto;
-      }
-      .btn {
-        padding: 0.6rem 1.2rem;
-        border-radius: 999px;
-        border: 1px solid var(--ink);
-        background: transparent;
-        color: var(--ink);
-        font: inherit;
-        cursor: pointer;
-      }
-      .btn.main {
-        background: var(--rose);
-        border-color: var(--rose);
-        color: #fff;
-      }
-      .btn.del {
-        border-color: #b3261e;
-        color: #b3261e;
-      }
-      .btn:disabled {
-        opacity: 0.5;
-        cursor: wait;
-      }
-      .bar {
-        display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-        margin-top: 1.1rem;
-        align-items: center;
-      }
-      .top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1rem;
-      }
-      .item {
-        display: flex;
-        gap: 0.9rem;
-        align-items: center;
-        padding: 0.8rem 0;
-        border-top: 1px solid var(--line);
-      }
-      .item:first-child {
-        border-top: 0;
-      }
-      .thumb {
-        width: 56px;
-        height: 70px;
-        border-radius: 8px;
-        background: #ebc9d6;
-        object-fit: cover;
-        flex: none;
-      }
-      .grow {
-        flex: 1;
-        min-width: 0;
-      }
-      .grow b {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .grow span {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-      .acts {
-        display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-      }
-      .acts .btn {
-        padding: 0.35rem 0.8rem;
-        font-size: 0.9rem;
-      }
-      #msg {
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-      #msg.err {
-        color: #b3261e;
-      }
-      #prev {
-        background: #efe6ec;
-        max-width: 140px;
-        border-radius: 10px;
-        margin-top: 0.5rem;
-        display: none;
-      }
-      #login {
-        max-width: 380px;
-        margin: 12vh auto;
-      }
-      [hidden] {
-        display: none !important;
-      }
-      @media (max-width: 560px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .item {
-          flex-wrap: wrap;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <div
-        id="login"
-        class="card"
-        hidden
-      >
-        <h1>Bell Aroma</h1>
-        <label for="pw">Contraseña del panel</label>
-        <input
-          id="pw"
-          type="password"
-          autocomplete="current-password"
-        />
-        <div class="bar">
-          <button
-            class="btn main"
-            id="go"
-            type="button"
-          >
-            Entrar</button
-          ><span
-            id="lmsg"
-            class="err"
-          ></span>
-        </div>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Panel · Bell Aroma</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F0F7;--card:#fff;--ink:#2A1840;--muted:#645478;--line:#DCCFE5;--rose:#A63C63;--serif:"Bodoni Moda",Georgia,serif;--sans:"Jost",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding:1.2rem}
+h1,h2{font-family:var(--serif);font-weight:500;margin:0 0 .8rem}
+h1{font-size:1.8rem}h2{font-size:1.35rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.3rem;margin-bottom:1.2rem}
+label{display:block;font-size:.9rem;color:var(--muted);margin:.8rem 0 .25rem}
+input,select,textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:80px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.chk{display:flex;align-items:center;gap:.5rem;margin-top:1rem;color:var(--ink)}
+.chk input{width:auto}
+.btn{padding:.6rem 1.2rem;border-radius:999px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.btn.main{background:var(--rose);border-color:var(--rose);color:#fff}
+.btn.del{border-color:#B3261E;color:#B3261E}
+.btn:disabled{opacity:.5;cursor:wait}
+.bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.item{display:flex;gap:.9rem;align-items:center;padding:.8rem 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.thumb{width:56px;height:70px;border-radius:8px;background:#EBC9D6;object-fit:cover;flex:none}
+.grow{flex:1;min-width:0}
+.grow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow span{color:var(--muted);font-size:.9rem}
+.acts{display:flex;gap:.4rem;flex-wrap:wrap}
+.acts .btn{padding:.35rem .8rem;font-size:.9rem}
+#msg{color:var(--muted);font-size:.95rem}
+#msg.err{color:#B3261E}
+#prev{background:#EFE6EC;max-width:140px;border-radius:10px;margin-top:.5rem;display:none}
+#login{max-width:380px;margin:12vh auto}
+[hidden]{display:none!important}
+@media(max-width:560px){.row{grid-template-columns:1fr}.item{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="card" hidden>
+    <h1>Bell Aroma</h1>
+    <label for="pw">Contraseña del panel</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <div class="bar"><button class="btn main" id="go" type="button">Entrar</button><span id="lmsg" class="err"></span></div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="top">
+      <h1>Panel de productos</h1>
+      <div class="acts"><a class="btn" href="/" target="_blank">Ver tienda</a><button class="btn" id="out" type="button">Salir</button></div>
+    </div>
+
+    <div class="card">
+      <h2>WhatsApp de la tienda</h2>
+      <label for="wa">Número con código de país, sin + (ej. 50760000000)</label>
+      <input id="wa" inputmode="numeric">
+      <div class="bar"><button class="btn" id="saveWa" type="button">Guardar número</button></div>
+    </div>
+
+    <div class="card">
+      <h2 id="ftitle">Nuevo producto</h2>
+      <label for="name">Nombre *</label><input id="name" maxlength="120">
+      <div class="row">
+        <div><label for="brand">Marca</label><input id="brand" maxlength="80"></div>
+        <div><label for="family">Familia olfativa</label>
+          <select id="family"><option value="">Sin familia</option><option>Floral</option><option>Cítrico y fresco</option><option>Dulce</option><option>Amaderado</option><option>Ámbar y especiado</option></select></div>
       </div>
-
-      <div
-        id="app"
-        hidden
-      >
-        <div class="top">
-          <h1>Panel de productos</h1>
-          <div class="acts">
-            <a
-              class="btn"
-              href="/"
-              target="_blank"
-              >Ver tienda</a
-            ><button
-              class="btn"
-              id="out"
-              type="button"
-            >
-              Salir
-            </button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>WhatsApp de la tienda</h2>
-          <label for="wa"
-            >Número con código de país, sin + (ej. 50760000000)</label
-          >
-          <input
-            id="wa"
-            inputmode="numeric"
-          />
-          <div class="bar">
-            <button
-              class="btn"
-              id="saveWa"
-              type="button"
-            >
-              Guardar número
-            </button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 id="ftitle">Nuevo producto</h2>
-          <label for="name">Nombre *</label
-          ><input
-            id="name"
-            maxlength="120"
-          />
-          <div class="row">
-            <div>
-              <label for="brand">Marca</label
-              ><input
-                id="brand"
-                maxlength="80"
-              />
-            </div>
-            <div>
-              <label for="family">Familia olfativa</label>
-              <select id="family">
-                <option value="">Sin familia</option>
-                <option>Floral</option>
-                <option>Cítrico y fresco</option>
-                <option>Dulce</option>
-                <option>Amaderado</option>
-                <option>Ámbar y especiado</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="size">Tamaño (ej. 100 ml)</label
-              ><input
-                id="size"
-                maxlength="20"
-              />
-            </div>
-            <div>
-              <label for="price">Precio (opcional, ej. $45)</label
-              ><input
-                id="price"
-                maxlength="20"
-              />
-            </div>
-          </div>
-          <label for="desc">Descripción corta</label
-          ><textarea
-            id="desc"
-            maxlength="500"
-          ></textarea>
-          <label for="file">Foto</label
-          ><input
-            id="file"
-            type="file"
-            accept="image/*"
-          />
-          <img
-            id="prev"
-            alt="Vista previa"
-          />
-          <label class="chk"
-            ><input
-              id="avail"
-              type="checkbox"
-              checked
-            />
-            Disponible</label
-          >
-          <div class="bar">
-            <button
-              class="btn main"
-              id="save"
-              type="button"
-            >
-              Guardar producto
-            </button>
-            <button
-              class="btn"
-              id="cancel"
-              type="button"
-              hidden
-            >
-              Cancelar edición
-            </button>
-            <span id="msg"></span>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Productos (<span id="count">0</span>)</h2>
-          <div id="list"></div>
-        </div>
+      <div class="row">
+        <div><label for="size">Tamaño (ej. 100 ml)</label><input id="size" maxlength="20"></div>
+        <div><label for="price">Precio (opcional, ej. $45)</label><input id="price" maxlength="20"></div>
+      </div>
+      <label for="desc">Descripción corta</label><textarea id="desc" maxlength="500"></textarea>
+      <label for="file">Foto</label><input id="file" type="file" accept="image/*">
+      <img id="prev" alt="Vista previa">
+      <label class="chk"><input id="avail" type="checkbox" checked> Disponible</label>
+      <div class="bar">
+        <button class="btn main" id="save" type="button">Guardar producto</button>
+        <button class="btn" id="cancel" type="button" hidden>Cancelar edición</button>
+        <span id="msg"></span>
       </div>
     </div>
 
-    <script>
-      var $ = function (id) {
-        return document.getElementById(id);
-      };
-      var token = localStorage.getItem('ba-token') || '';
-      var data = { settings: { whatsapp: '' }, products: [] };
-      var editing = null,
-        newImage = null,
-        newCut = false;
+    <div class="card"><h2>Productos (<span id="count">0</span>)</h2><div id="list"></div></div>
+  </div>
+</div>
 
-      function say(t, err) {
-        $('msg').textContent = t || '';
-        $('msg').className = err ? 'err' : '';
-      }
-      function api(method, url, body) {
-        return fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-        }).then(function (r) {
-          if (r.status === 401 && token) {
-            logout();
-            throw new Error('Sesión vencida');
-          }
-          return r.json().then(function (j) {
-            if (!r.ok) throw new Error(j.error || 'Error');
-            return j;
-          });
-        });
-      }
-      function logout() {
-        token = '';
-        localStorage.removeItem('ba-token');
-        show();
-      }
-      function show() {
-        $('login').hidden = !!token;
-        $('app').hidden = !token;
-        if (token) load();
-      }
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var token = localStorage.getItem("ba-token") || "";
+var data = { settings: { whatsapp: "" }, products: [] };
+var editing = null, newImage = null, newCut = false;
 
-      $('go').onclick = function () {
-        api('POST', '/api/login', { password: $('pw').value })
-          .then(function (r) {
-            token = r.token;
-            localStorage.setItem('ba-token', token);
-            $('pw').value = '';
-            $('lmsg').textContent = '';
-            show();
-          })
-          .catch(function (e) {
-            $('lmsg').textContent = e.message;
-          });
-      };
-      $('pw').onkeydown = function (e) {
-        if (e.key === 'Enter') $('go').click();
-      };
-      $('out').onclick = logout;
+function say(t, err) { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; }
+function api(method, url, body) {
+  return fetch(url, {
+    method: method,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function (r) {
+    if (r.status === 401 && token) { logout(); throw new Error("Sesión vencida"); }
+    return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "Error"); return j; });
+  });
+}
+function logout() { token = ""; localStorage.removeItem("ba-token"); show(); }
+function show() { $("login").hidden = !!token; $("app").hidden = !token; if (token) load(); }
 
-      function load() {
-        fetch('/api/store')
-          .then(function (r) {
-            return r.json();
-          })
-          .then(function (d) {
-            data = d;
-            $('wa').value = (d.settings && d.settings.whatsapp) || '';
-            render();
-          });
-      }
-      function persist(msg) {
-        return api('PUT', '/api/store', data)
-          .then(function (d) {
-            data = d;
-            render();
-            say(msg);
-          })
-          .catch(function (e) {
-            say(e.message, true);
-          });
-      }
-      $('saveWa').onclick = function () {
-        data.settings.whatsapp = $('wa').value;
-        persist('Número guardado.');
-      };
+$("go").onclick = function () {
+  api("POST", "/api/login", { password: $("pw").value }).then(function (r) {
+    token = r.token; localStorage.setItem("ba-token", token); $("pw").value = ""; $("lmsg").textContent = ""; show();
+  }).catch(function (e) { $("lmsg").textContent = e.message; });
+};
+$("pw").onkeydown = function (e) { if (e.key === "Enter") $("go").click(); };
+$("out").onclick = logout;
 
-      function resize(file) {
-        return new Promise(function (ok, no) {
-          var img = new Image();
-          img.onload = function () {
-            var s = Math.min(1, 1000 / Math.max(img.width, img.height));
-            var c = document.createElement('canvas');
-            c.width = Math.round(img.width * s);
-            c.height = Math.round(img.height * s);
-            var ctx = c.getContext('2d');
-            ctx.drawImage(img, 0, 0, c.width, c.height);
-            URL.revokeObjectURL(img.src);
-            var cut = false;
-            try {
-              cut =
-                ctx.getImageData(0, 0, 1, 1).data[3] < 250 &&
-                ctx.getImageData(c.width - 1, c.height - 1, 1, 1).data[3] < 250;
-            } catch (e) {}
-            ok({
-              data: cut
-                ? c.toDataURL('image/png')
-                : c.toDataURL('image/jpeg', 0.85),
-              cut: cut,
-            });
-          };
-          img.onerror = function () {
-            no(new Error('No se pudo leer la imagen'));
-          };
-          img.src = URL.createObjectURL(file);
-        });
-      }
-      $('file').onchange = function () {
-        var f = $('file').files[0];
-        if (!f) return;
-        resize(f)
-          .then(function (r) {
-            newImage = r.data;
-            newCut = r.cut;
-            $('prev').src = r.data;
-            $('prev').style.display = 'block';
-          })
-          .catch(function (e) {
-            say(e.message, true);
-          });
-      };
+function load() {
+  fetch("/api/store").then(function (r) { return r.json(); }).then(function (d) {
+    data = d; $("wa").value = (d.settings && d.settings.whatsapp) || ""; render();
+  });
+}
+function persist(msg) {
+  return api("PUT", "/api/store", data).then(function (d) { data = d; render(); say(msg); }).catch(function (e) { say(e.message, true); });
+}
+$("saveWa").onclick = function () { data.settings.whatsapp = $("wa").value; persist("Número guardado."); };
 
-      function clearForm() {
-        editing = null;
-        newImage = null;
-        newCut = false;
-        ['name', 'brand', 'size', 'price', 'desc', 'file'].forEach(
-          function (k) {
-            $(k).value = '';
-          },
-        );
-        $('family').value = '';
-        $('avail').checked = true;
-        $('prev').style.display = 'none';
-        $('ftitle').textContent = 'Nuevo producto';
-        $('cancel').hidden = true;
-      }
-      $('cancel').onclick = function () {
-        clearForm();
-        say('');
-      };
+function resize(file) {
+  return new Promise(function (ok, no) {
+    var img = new Image();
+    img.onload = function () {
+      var s = Math.min(1, 1000 / Math.max(img.width, img.height));
+      var c = document.createElement("canvas");
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      var ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      var cut = false;
+      try { cut = ctx.getImageData(0, 0, 1, 1).data[3] < 250 && ctx.getImageData(c.width - 1, c.height - 1, 1, 1).data[3] < 250; } catch (e) {}
+      ok({ data: cut ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.85), cut: cut });
+    };
+    img.onerror = function () { no(new Error("No se pudo leer la imagen")); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("file").onchange = function () {
+  var f = $("file").files[0]; if (!f) return;
+  resize(f).then(function (r) { newImage = r.data; newCut = r.cut; $("prev").src = r.data; $("prev").style.display = "block"; }).catch(function (e) { say(e.message, true); });
+};
 
-      $('save').onclick = function () {
-        var name = $('name').value.trim();
-        if (!name) {
-          say('Escribe el nombre del producto.', true);
-          return;
-        }
-        $('save').disabled = true;
-        say('Guardando…');
-        var old = editing
-          ? data.products.find(function (p) {
-              return p.id === editing;
-            })
-          : null;
-        var step = newImage
-          ? api('POST', '/api/upload', { image: newImage }).then(function (r) {
-              return r.url;
-            })
-          : Promise.resolve(old ? old.image : '');
-        step
-          .then(function (img) {
-            var p = {
-              id: old ? old.id : 'p' + Date.now().toString(36),
-              name: name,
-              brand: $('brand').value,
-              family: $('family').value,
-              size: $('size').value,
-              price: $('price').value,
-              description: $('desc').value,
-              image: img,
-              available: $('avail').checked,
-              cutout: newImage ? newCut : !!(old && old.cutout),
-            };
-            if (old) data.products[data.products.indexOf(old)] = p;
-            else data.products.unshift(p);
-            return persist('Producto guardado.');
-          })
-          .then(function () {
-            clearForm();
-          })
-          .catch(function (e) {
-            say(e.message, true);
-          })
-          .then(function () {
-            $('save').disabled = false;
-          });
-      };
+function clearForm() {
+  editing = null; newImage = null; newCut = false;
+  ["name", "brand", "size", "price", "desc", "file"].forEach(function (k) { $(k).value = ""; });
+  $("family").value = ""; $("avail").checked = true; $("prev").style.display = "none";
+  $("ftitle").textContent = "Nuevo producto"; $("cancel").hidden = true;
+}
+$("cancel").onclick = function () { clearForm(); say(""); };
 
-      function edit(p) {
-        editing = p.id;
-        newImage = null;
-        $('name').value = p.name;
-        $('brand').value = p.brand;
-        $('family').value = p.family;
-        $('size').value = p.size;
-        $('price').value = p.price;
-        $('desc').value = p.description;
-        $('avail').checked = p.available;
-        if (p.image) {
-          $('prev').src = p.image;
-          $('prev').style.display = 'block';
-        } else $('prev').style.display = 'none';
-        $('ftitle').textContent = 'Editar producto';
-        $('cancel').hidden = false;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      function btn(label, cls, fn) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'btn ' + cls;
-        b.textContent = label;
-        b.onclick = fn;
-        return b;
-      }
+$("save").onclick = function () {
+  var name = $("name").value.trim();
+  if (!name) { say("Escribe el nombre del producto.", true); return; }
+  $("save").disabled = true; say("Guardando…");
+  var old = editing ? data.products.find(function (p) { return p.id === editing; }) : null;
+  var step = newImage ? api("POST", "/api/upload", { image: newImage }).then(function (r) { return r.url; }) : Promise.resolve(old ? old.image : "");
+  step.then(function (img) {
+    var p = {
+      id: old ? old.id : "p" + Date.now().toString(36), name: name, brand: $("brand").value, family: $("family").value,
+      size: $("size").value, price: $("price").value, description: $("desc").value, image: img, available: $("avail").checked, cutout: newImage ? newCut : !!(old && old.cutout)
+    };
+    if (old) data.products[data.products.indexOf(old)] = p; else data.products.unshift(p);
+    return persist("Producto guardado.");
+  }).then(function () { clearForm(); }).catch(function (e) { say(e.message, true); }).then(function () { $("save").disabled = false; });
+};
 
-      function render() {
-        $('count').textContent = data.products.length;
-        var l = $('list');
-        l.textContent = '';
-        if (!data.products.length) {
-          l.textContent = 'Aún no hay productos. Agrega el primero arriba.';
-          return;
-        }
-        data.products.forEach(function (p) {
-          var row = document.createElement('div');
-          row.className = 'item';
-          var im = document.createElement('img');
-          im.className = 'thumb';
-          im.alt = '';
-          if (p.image) im.src = p.image;
-          var g = document.createElement('div');
-          g.className = 'grow';
-          var b = document.createElement('b');
-          b.textContent = p.name;
-          var s = document.createElement('span');
-          s.textContent = [
-            p.brand,
-            p.size,
-            p.price,
-            p.available ? '' : 'Agotado',
-          ]
-            .filter(Boolean)
-            .join(' · ');
-          g.appendChild(b);
-          g.appendChild(s);
-          var a = document.createElement('div');
-          a.className = 'acts';
-          a.appendChild(
-            btn(
-              p.available ? 'Marcar agotado' : 'Marcar disponible',
-              '',
-              function () {
-                p.available = !p.available;
-                persist('Actualizado.');
-              },
-            ),
-          );
-          a.appendChild(
-            btn('Editar', '', function () {
-              edit(p);
-            }),
-          );
-          a.appendChild(
-            btn('Eliminar', 'del', function () {
-              if (confirm('¿Eliminar “' + p.name + '”?')) {
-                data.products = data.products.filter(function (x) {
-                  return x.id !== p.id;
-                });
-                persist('Producto eliminado.');
-              }
-            }),
-          );
-          row.appendChild(im);
-          row.appendChild(g);
-          row.appendChild(a);
-          l.appendChild(row);
-        });
-      }
-      show();
-    </script>
-  </body>
+function edit(p) {
+  editing = p.id; newImage = null;
+  $("name").value = p.name; $("brand").value = p.brand; $("family").value = p.family; $("size").value = p.size;
+  $("price").value = p.price; $("desc").value = p.description; $("avail").checked = p.available;
+  if (p.image) { $("prev").src = p.image; $("prev").style.display = "block"; } else $("prev").style.display = "none";
+  $("ftitle").textContent = "Editar producto"; $("cancel").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function btn(label, cls, fn) { var b = document.createElement("button"); b.type = "button"; b.className = "btn " + cls; b.textContent = label; b.onclick = fn; return b; }
+
+function render() {
+  $("count").textContent = data.products.length;
+  var l = $("list"); l.textContent = "";
+  if (!data.products.length) { l.textContent = "Aún no hay productos. Agrega el primero arriba."; return; }
+  data.products.forEach(function (p) {
+    var row = document.createElement("div"); row.className = "item";
+    var im = document.createElement("img"); im.className = "thumb"; im.alt = ""; if (p.image) im.src = p.image;
+    var g = document.createElement("div"); g.className = "grow";
+    var b = document.createElement("b"); b.textContent = p.name;
+    var s = document.createElement("span"); s.textContent = [p.brand, p.size, p.price, p.available ? "" : "Agotado"].filter(Boolean).join(" · ");
+    g.appendChild(b); g.appendChild(s);
+    var a = document.createElement("div"); a.className = "acts";
+    a.appendChild(btn(p.available ? "Marcar agotado" : "Marcar disponible", "", function () { p.available = !p.available; persist("Actualizado."); }));
+    a.appendChild(btn("Editar", "", function () { edit(p); }));
+    a.appendChild(btn("Eliminar", "del", function () {
+      if (confirm("¿Eliminar “" + p.name + "”?")) { data.products = data.products.filter(function (x) { return x.id !== p.id; }); persist("Producto eliminado."); }
+    }));
+    row.appendChild(im); row.appendChild(g); row.appendChild(a); l.appendChild(row);
+  });
+}
+show();
+</script>
+</body>
 </html>
