@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bell Aroma · Perfumería</title>
+<meta name="description" content="Bell Aroma, perfumería en Ciudad de Panamá. Fragancias para cada momento.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,700;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F0F7; --card:#FFFFFF; --ink:#2A1840; --muted:#645478; --line:#DCCFE5;
+  --rose:#A63C63; --rose-ink:#FFFFFF; --glass1:#EBC9D6; --glass2:#D9A05B;
+  --serif:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif;
+  --sans:"Jost","Avenir Next","Segoe UI",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1B1028; --card:#27183A; --ink:#F3E9F6; --muted:#B9A8C9; --line:#3D2A55;
+  --rose:#E57FA4; --rose-ink:#1B1028; --glass1:#7A3F65; --glass2:#C58B4A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth;height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:400;font-size:1.05rem;line-height:1.6}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1.4rem}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 0}
+.brand{font-family:var(--serif);font-weight:700;font-size:1.45rem;text-decoration:none;display:flex;align-items:center;gap:.5rem}
+nav{display:flex;gap:1.4rem;font-size:.95rem}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+nav{align-items:center}
+.theme-btn{width:2.5rem;height:2.5rem;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.1rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.theme-btn:hover{border-color:var(--rose)}
+
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:2rem;align-items:center;padding:3rem 0 4.5rem}
+.hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.8rem,7.5vw,5.6rem);line-height:1;letter-spacing:-.02em;margin:0 0 1.4rem}
+.hero p{max-width:34ch;color:var(--muted);font-size:1.15rem;margin:0 0 2rem;font-weight:300}
+.btns{display:flex;flex-wrap:wrap;gap:.8rem}
+.btn{display:inline-block;padding:.85rem 1.5rem;border-radius:999px;text-decoration:none;font-weight:500;font-size:1rem;border:1px solid var(--ink);cursor:pointer;font-family:inherit;background:transparent;color:var(--ink)}
+.btn.main{background:var(--rose);border-color:var(--rose);color:var(--rose-ink)}
+.btn:hover{filter:brightness(1.08)}
+.bottle{display:flex;justify-content:center}
+.bottle svg{width:min(100%,320px);height:auto;cursor:pointer;transform-origin:50% 8%;overflow:visible}
+.swing{animation:swing 2.2s ease-out 1}
+@keyframes swing{0%{transform:rotate(0)}12%{transform:rotate(9deg)}28%{transform:rotate(-7deg)}46%{transform:rotate(4.5deg)}64%{transform:rotate(-2.5deg)}82%{transform:rotate(1deg)}100%{transform:rotate(0)}}
+
+section{padding:3.5rem 0;border-top:1px solid var(--line)}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;margin:0 0 .8rem;letter-spacing:-.01em}
+.lead{color:var(--muted);max-width:52ch;margin:0 0 2rem;font-weight:300}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.2rem;margin-top:1.4rem}
+.prod{background:var(--card);border:1px solid var(--line);border-radius:4px 20px 20px 20px;overflow:hidden;display:flex;flex-direction:column}
+.prod .ph{aspect-ratio:4/5;background:linear-gradient(160deg,var(--glass1),var(--glass2));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:2rem;color:var(--ink)}
+.prod .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.prod.out .ph{opacity:.55}
+.prod.cut .ph{background:radial-gradient(circle at 50% 40%,#fff,#EFE6EC)}
+.prod.cut .ph img{object-fit:contain;padding:6%}
+.prod .info{padding:1rem 1.1rem 1.2rem;display:flex;flex-direction:column;gap:.3rem;flex:1}
+.prod h3{font-family:var(--serif);font-weight:500;font-size:1.2rem;margin:0}
+.prod .meta{color:var(--muted);font-size:.92rem;margin:0}
+.prod .price{font-weight:500;margin:0}
+.prod .btn{margin-top:auto;text-align:center;padding:.6rem 1rem;font-size:.95rem}
+.empty{color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.col{padding:1.4rem 1.2rem;border:1px solid var(--line);border-radius:18px 18px 4px 18px;background:var(--card)}
+.col h3{font-family:var(--serif);font-weight:500;font-size:1.3rem;margin:0 0 .4rem}
+.col p{margin:0;color:var(--muted);font-size:.97rem}
+
+.finder{display:grid;grid-template-columns:.9fr 1.1fr;gap:2rem;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem}
+.chip{padding:.6rem 1.1rem;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:.98rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.result{background:var(--card);border:1px solid var(--line);border-radius:4px 22px 22px 22px;padding:1.8rem}
+.result h3{font-family:var(--serif);font-weight:500;font-size:1.7rem;margin:0 0 .5rem}
+.result p{margin:0 0 1.2rem;color:var(--muted)}
+.notes{font-style:italic;font-family:var(--serif);color:var(--ink);margin-bottom:1.4rem!important}
+
+.visit{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+.pin{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:2rem}
+.pin p{margin:0 0 1.2rem;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding:2rem 0 2.4rem;color:var(--muted);font-size:.92rem;display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between}
+.float{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:5}
+
+@media (max-width:820px){
+  .hero,.finder,.visit{grid-template-columns:1fr}
+  .cols{grid-template-columns:1fr 1fr}
+  .bottle{order:-1}.bottle svg{width:200px}
+  nav{gap:1rem}
+}
+@media (max-width:480px){.cols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.swing{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="#inicio" aria-label="Bell Aroma, inicio">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-3.5 0-5 3-5.4 7-.3 3-1.3 4.5-2.6 6.5h16c-1.300-2-2.300-3.500-2.600-6.500C17 6 15.500 3 12 3Z" fill="var(--rose)"/><circle cx="12" cy="20" r="1.800" fill="var(--rose)"/></svg>
+      Bell Aroma
+    </a>
+    <nav aria-label="Principal">
+      <a href="#catalogo">Catálogo</a>
+      <a href="#aroma">Tu aroma</a>
+      <a href="#colecciones">Colecciones</a>
+      <a href="#visitanos">Visítanos</a>
+      <button type="button" class="theme-btn" id="theme" aria-label="Cambiar a tema oscuro" title="Cambiar tema">☾</button>
+    </nav>
+  </header>
+
+  <main id="inicio">
+    <div class="hero">
+      <div>
+        <h1>Un aroma que se anuncia antes de entrar.</h1>
+        <p>Perfumería en Ciudad de Panamá. Fragancias para ella, para él y para quien quiera regalar algo que se recuerde.</p>
+        <div class="btns">
+          <a class="btn main" href="#aroma">Encuentra tu aroma</a>
+          <a class="btn" href="#visitanos">Visítanos</a>
+        </div>
+      </div>
+      <div class="bottle">
+        <svg id="bell" viewBox="0 0 240 330" role="img" aria-label="Frasco de perfume con forma de campana. Toca para hacerlo sonar.">
+          <defs>
+            <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--glass1)"/>
+              <stop offset="1" stop-color="var(--glass2)"/>
+            </linearGradient>
+          </defs>
+          <rect x="102" y="14" width="36" height="38" rx="7" fill="var(--ink)"/>
+          <rect x="109" y="52" width="22" height="22" fill="var(--ink)" opacity=".85"/>
+          <path d="M120 74C74 74 64 138 54 198c-6 36-20 56-32 82h196c-12-26-26-46-32-82-10-60-20-124-66-124Z" fill="url(#glass)"/>
+          <path d="M92 96c-14 30-18 70-26 112" stroke="#fff" stroke-opacity=".55" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <rect x="88" y="170" width="64" height="52" rx="4" fill="var(--bg)" opacity=".9"/>
+          <text x="120" y="204" text-anchor="middle" font-family="Bodoni Moda, Georgia, serif" font-size="26" font-weight="700" fill="var(--ink)">BA</text>
+          <circle cx="120" cy="298" r="15" fill="var(--ink)"/>
+        </svg>
+      </div>
+    </div>
+
+    <section id="catalogo" aria-labelledby="t-cat">
+      <h2 id="t-cat">Catálogo</h2>
+      <p class="lead">Fragancias disponibles en tienda. Pregúntanos por la que te guste y la reservamos.</p>
+      <div class="chips" id="cat-chips" role="group" aria-label="Filtrar por familia"></div>
+      <div class="grid" id="grid"></div>
+      <p class="empty" id="cat-empty" hidden>Pronto verás aquí nuestras fragancias.</p>
+    </section>
+
+    <section id="aroma" aria-labelledby="t-aroma">
+      <h2 id="t-aroma">¿Qué aroma buscas hoy?</h2>
+      <p class="lead">Elige una familia olfativa y cuéntanos cuál te llamó la atención. Te orientamos por mensaje.</p>
+      <div class="finder">
+        <div class="chips" id="chips" role="group" aria-label="Familias olfativas"></div>
+        <div class="result" aria-live="polite">
+          <h3 id="r-title"></h3>
+          <p id="r-desc"></p>
+          <p class="notes" id="r-notes"></p>
+          <a class="btn main" id="r-cta" href="#" target="_blank" rel="noopener">Hablemos de este aroma</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="colecciones" aria-labelledby="t-col">
+      <h2 id="t-col">Colecciones</h2>
+      <p class="lead">Fragancias para distintos momentos. Escríbenos y te mostramos lo que hay disponible.</p>
+      <div class="cols">
+        <div class="col"><h3>Para ella</h3><p>Florales, dulces y elegantes para el día a día o una noche especial.</p></div>
+        <div class="col"><h3>Para él</h3><p>Amaderados, frescos y de carácter para la oficina o la salida.</p></div>
+        <div class="col"><h3>Unisex</h3><p>Aromas que no piden etiqueta y se adaptan a cada piel.</p></div>
+        <div class="col"><h3>Para regalar</h3><p>Te ayudamos a acertar según la persona y la ocasión.</p></div>
+      </div>
+    </section>
+
+    <section id="visitanos" aria-labelledby="t-vis">
+      <div class="visit">
+        <div>
+          <h2 id="t-vis">Ven a probarlos</h2>
+          <p class="lead" style="margin-bottom:0">Un aroma se elige en la piel. Pasa por la tienda, huele con calma y llévate el que te acompañe.</p>
+        </div>
+        <div class="pin">
+          <p>Bell Aroma Perfumería<br>Ciudad de Panamá</p>
+          <div class="btns">
+            <a class="btn main" href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Cómo llegar</a>
+            <a class="btn" href="https://www.instagram.com/bell_aroma_oficial" target="_blank" rel="noopener">Instagram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="yr"></span> Bell Aroma</span>
+    <span>@bell_aroma_oficial</span>
+  </footer>
+</div>
+
+<a class="btn main float" id="wa" href="#" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">Escríbenos</a>
+
+<script>
+var WA_NUMBER = ""; // se configura desde /admin
+
+var families = [
+  {n:"Floral", d:"Flores blancas, rosa y jazmín. Suaves, románticos y fáciles de llevar de día.", t:"Notas de jazmín, peonía y almizcle."},
+  {n:"Cítrico y fresco", d:"Limpios y ligeros, ideales para el calor y para quien prefiere un aroma discreto.", t:"Notas de bergamota, limón y té verde."},
+  {n:"Dulce", d:"Cálidos y envolventes, con un toque goloso que se queda en la ropa.", t:"Notas de vainilla, caramelo y haba tonka."},
+  {n:"Amaderado", d:"Profundos y elegantes, con presencia. Funcionan en cualquier estación.", t:"Notas de cedro, vetiver y sándalo."},
+  {n:"Ámbar y especiado", d:"Intensos y sofisticados, pensados para las noches y las ocasiones especiales.", t:"Notas de ámbar, canela y pimienta."}
+];
+
+function wa(msg){return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(msg);}
+
+var chips = document.getElementById("chips");
+function pick(i){
+  var f = families[i];
+  document.getElementById("r-title").textContent = f.n;
+  document.getElementById("r-desc").textContent = f.d;
+  document.getElementById("r-notes").textContent = f.t;
+  document.getElementById("r-cta").href = wa("Hola, me interesa un aroma de la familia " + f.n + ". ¿Me pueden orientar?");
+  Array.prototype.forEach.call(chips.children, function(c, j){ c.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+}
+families.forEach(function(f, i){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = f.n;
+  b.addEventListener("click", function(){ pick(i); });
+  chips.appendChild(b);
+});
+pick(0);
+
+var allProducts = [], famFilter = "Todos";
+function h(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; }
+function renderCatalog(list){
+  allProducts = list;
+  var fc = document.getElementById("cat-chips"); fc.textContent = "";
+  var fams = ["Todos"];
+  list.forEach(function(p){ if (p.family && fams.indexOf(p.family) < 0) fams.push(p.family); });
+  if (fams.length > 2) fams.forEach(function(f){
+    var b = h("button", "chip", f); b.type = "button";
+    b.setAttribute("aria-pressed", f === famFilter ? "true" : "false");
+    b.onclick = function(){ famFilter = f; renderCatalog(allProducts); };
+    fc.appendChild(b);
+  });
+  var g = document.getElementById("grid"); g.textContent = "";
+  var shown = list.filter(function(p){ return famFilter === "Todos" || p.family === famFilter; });
+  document.getElementById("cat-empty").hidden = shown.length > 0;
+  shown.forEach(function(p){
+    var card = h("div", "prod" + (p.available === false ? " out" : "") + (p.cutout ? " cut" : ""));
+    var ph = h("div", "ph");
+    if (/^(\/|https:\/\/)/.test(p.image || "")) { var im = h("img"); im.src = p.image; im.alt = p.name; im.loading = "lazy"; ph.appendChild(im); }
+    else ph.textContent = "BA";
+    var info = h("div", "info");
+    info.appendChild(h("h3", "", p.name));
+    var meta = [p.brand, p.size, p.family].filter(Boolean).join(" · ");
+    if (meta) info.appendChild(h("p", "meta", meta));
+    if (p.description) info.appendChild(h("p", "meta", p.description));
+    if (p.price) info.appendChild(h("p", "price", p.price));
+    if (p.available === false) info.appendChild(h("p", "meta", "Agotado por ahora"));
+    var a = h("a", "btn main", "Preguntar por este aroma"); a.target = "_blank"; a.rel = "noopener";
+    a.href = wa("Hola, me interesa " + p.name + (p.brand ? " de " + p.brand : "") + ". ¿Me pueden dar más información?");
+    info.appendChild(a); card.appendChild(ph); card.appendChild(info); g.appendChild(card);
+  });
+}
+function refreshLinks(){
+  document.getElementById("wa").href = wa("Hola, vi su página de Bell Aroma y quisiera más información.");
+  var on = chips.querySelector('[aria-pressed="true"]'); pick(Array.prototype.indexOf.call(chips.children, on));
+}
+fetch("/api/store", { cache: "no-store" }).then(function(r){ return r.json(); }).then(function(d){
+  if (d.settings && d.settings.whatsapp) WA_NUMBER = d.settings.whatsapp;
+  refreshLinks(); renderCatalog(d.products || []);
+}).catch(function(){ renderCatalog([]); });
+
+document.getElementById("wa").href = wa("Hola, vi su página de Bell Aroma y quisiera más información.");
+document.getElementById("yr").textContent = new Date().getFullYear();
+
+var root = document.documentElement;
+var themeBtn = document.getElementById("theme");
+function isDark(){
+  var t = root.getAttribute("data-theme");
+  return t === "dark";
+}
+function paintThemeBtn(){
+  var dark = isDark();
+  themeBtn.textContent = dark ? "☀" : "☾";
+  themeBtn.setAttribute("aria-label", dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro");
+}
+try {
+  var saved = localStorage.getItem("ba-theme");
+  if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
+} catch (e) {}
+themeBtn.addEventListener("click", function(){
+  var next = isDark() ? "light" : "dark";
+  root.setAttribute("data-theme", next);
+  try { localStorage.setItem("ba-theme", next); } catch (e) {}
+  paintThemeBtn();
+});
+paintThemeBtn();
+
+var bell = document.getElementById("bell");
+function ring(){ bell.classList.remove("swing"); void bell.getBoundingClientRect(); bell.classList.add("swing"); }
+bell.addEventListener("click", ring);
+setTimeout(ring, 500);
+</script>
+</body>
+</html>
