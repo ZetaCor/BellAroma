@@ -16,7 +16,7 @@ const CartPrices = (() => {
     return sum;
   }
   const format = (value) => value === null ? 'Por confirmar' : currency.format(value / 100);
-  return { total, format };
+  return { cents, total, format };
 })();
 
 if (typeof module !== 'undefined') module.exports = CartPrices;

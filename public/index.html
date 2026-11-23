@@ -45,14 +45,46 @@
     <div class="section-heading">
       <div><h2 id="catalog-title">Catálogo de perfumes</h2><p class="muted">Encuentra tu próximo perfume por nombre, marca o familia olfativa.</p></div>
     </div>
-    <div class="filters" id="filters" hidden>
-      <label>Buscar perfumes<input type="search" id="search" placeholder="Nombre o marca"></label>
-      <label id="family-field" hidden>Familia olfativa<select id="family"><option value="">Todas las familias</option></select></label>
-      <label>Ordenar<select id="sort"><option value="default">Orden del catálogo</option><option value="name">Nombre, A–Z</option></select></label>
-    </div>
+    <form class="catalog-tools" id="filters" role="search" aria-label="Buscar y filtrar perfumes" hidden>
+      <div class="catalog-toolbar">
+        <div class="search-box">
+          <span class="search-icon" aria-hidden="true"></span>
+          <label class="sr-only" for="search">Buscar en el catálogo</label>
+          <input type="search" id="search" placeholder="Buscar perfume, marca o nota…" autocomplete="off" maxlength="120" enterkeyhint="search" aria-controls="products">
+          <button class="clear-search" id="clear-search" type="button" aria-label="Borrar búsqueda" hidden>×</button>
+        </div>
+        <button class="filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filter-panel">
+          <span class="filter-icon" aria-hidden="true"></span>Filtros<span id="filter-count" hidden></span>
+        </button>
+        <label class="sort-field"><span>Ordenar por</span>
+          <select id="sort">
+            <option value="default">Relevancia</option><option value="name">Nombre, A–Z</option>
+            <option value="low">Menor precio</option><option value="high">Mayor precio</option>
+          </select>
+        </label>
+      </div>
+      <div class="filter-panel" id="filter-panel" hidden>
+        <label id="brand-field" hidden>Marca<select id="brand"><option value="">Todas las marcas</option></select></label>
+        <label id="family-field" hidden>Familia olfativa<select id="family"><option value="">Todas las familias</option></select></label>
+        <label id="price-field" hidden>Precio<select id="price-band">
+          <option value="">Cualquier precio</option><option value="under50">Menos de $50</option>
+          <option value="50to100">$50 a menos de $100</option><option value="100plus">$100 o más</option><option value="ask">Precio a consultar</option>
+        </select></label>
+        <label>Disponibilidad<select id="availability">
+          <option value="">Cualquiera</option><option value="stock">En existencia</option><option value="ask">Por confirmar</option><option value="out">Agotado</option>
+        </select></label>
+      </div>
+      <div class="active-filters" id="active-filters" aria-label="Selección actual" hidden>
+        <div id="filter-chips"></div><button class="reset-filters" id="reset-filters" type="button">Limpiar todo</button>
+      </div>
+    </form>
     <p id="catalog-status" class="muted" role="status">Cargando catálogo…</p>
     <button class="button secondary" id="retry" type="button" hidden>Volver a intentar</button>
     <div class="product-grid" id="products"></div>
+    <div class="empty-results" id="empty-results" hidden>
+      <h3>No encontramos coincidencias</h3><p>Prueba con otro nombre o quita algún filtro.</p>
+      <button type="button" id="show-all" class="button secondary">Ver todo el catálogo</button>
+    </div>
     <noscript><p>Activa JavaScript para explorar el catálogo.</p></noscript>
   </section>
   <section class="shell guide" id="aroma" aria-labelledby="guide-title">

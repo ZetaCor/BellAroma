@@ -1,6 +1,9 @@
 ﻿const byId = (id) => document.getElementById(id);
 const search = byId('search');
+const brand = byId('brand');
 const family = byId('family');
+const priceBand = byId('price-band');
+const availability = byId('availability');
 const sort = byId('sort');
 const status = byId('catalog-status');
 const grid = byId('products');
@@ -8,6 +11,8 @@ const retry = byId('retry');
 const collator = new Intl.Collator('es', { sensitivity: 'base' });
 
 let products = [];
+let catalogEntries = [];
+let displayedEntries = [];
 let whatsapp = '';
 let settings = {};
 let cart = [];
@@ -196,7 +201,8 @@ payment.addEventListener('change', paymentInstructions);
 byId('checkout-close').addEventListener('click', () => checkout.close());
 
 function normalize(value) {
-  return String(value || '').normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es');
+  return String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es')
+    .replace(/(\d)\s*(ml|oz)\b/g, '$1$2').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
 function element(tag, className, text) {
@@ -258,17 +264,90 @@ function productCard(product) {
   return card;
 }
 
+function catalogEntry(product) {
+  const price = CartPrices.cents(product.price);
+  let band = 'ask';
+  if (price !== null) band = price < 5000 ? 'under50' : price < 10000 ? '50to100' : '100plus';
+  const soldOut = product.available === false || product.stock === 0;
+  return {
+    product, price, band, name: normalize(product.name), brand: normalize(product.brand), family: normalize(product.family),
+    availability: soldOut ? 'out' : product.stock == null ? 'ask' : 'stock',
+    text: normalize([product.name, product.brand, product.family, product.description, product.size].join(' ')),
+  };
+}
+
+function populateFacet(select, key) {
+  const previous = select.value;
+  const labels = new Map();
+  for (const entry of catalogEntries) {
+    if (entry[key] && !labels.has(entry[key])) labels.set(entry[key], entry.product[key].trim());
+  }
+  select.options.length = 1;
+  const options = Array.from(labels).sort((a, b) => collator.compare(a[1], b[1]));
+  options.forEach(([value, label]) => select.add(new Option(label, value)));
+  select.value = labels.has(previous) ? previous : '';
+  select.parentElement.hidden = !labels.size;
+}
+
+function relevance(entry, query) {
+  if (entry.name === query) return 0;
+  if (entry.name.startsWith(query)) return 1;
+  if (entry.name.includes(query) || entry.brand === query) return 2;
+  return 3;
+}
+
 function render() {
-  const query = normalize(search.value.trim());
-  const matches = products.filter((product) =>
-    (!family.value || product.family === family.value) &&
-    normalize([product.name, product.brand, product.family].join(' ')).includes(query)
+  const query = normalize(search.value);
+  const terms = query.split(' ').filter(Boolean);
+  const matches = catalogEntries.filter((entry) =>
+    (!brand.value || entry.brand === brand.value) &&
+    (!family.value || entry.family === family.value) &&
+    (!priceBand.value || entry.band === priceBand.value) &&
+    (!availability.value || entry.availability === availability.value) &&
+    terms.every((term) => entry.text.includes(term))
   );
-  if (sort.value === 'name') matches.sort((a, b) => collator.compare(a.name, b.name));
-  grid.replaceChildren(...matches.map(productCard));
+  if (sort.value === 'name') matches.sort((a, b) => collator.compare(a.product.name, b.product.name));
+  else if (sort.value === 'low' || sort.value === 'high') {
+    matches.sort((a, b) => {
+      if (a.price === null || b.price === null) return Number(a.price === null) - Number(b.price === null);
+      return sort.value === 'low' ? a.price - b.price : b.price - a.price;
+    });
+  } else if (query) matches.sort((a, b) => relevance(a, query) - relevance(b, query));
+
+  if (matches.length !== displayedEntries.length || matches.some((entry, i) => displayedEntries[i] !== entry)) {
+    grid.replaceChildren(...matches.map((entry) => entry.card ??= productCard(entry.product)));
+    displayedEntries = matches;
+  }
+  const noun = products.length === 1 ? 'fragancia' : 'fragancias';
+  status.textContent = matches.length === products.length ? products.length + ' ' + noun :
+    matches.length + ' de ' + products.length + ' ' + noun;
   if (!products.length) status.textContent = 'Pronto encontrarás aquí nuestras fragancias.';
-  else if (!matches.length) status.textContent = 'No encontramos fragancias. Prueba con otra búsqueda o familia.';
-  else status.textContent = matches.length === 1 ? '1 fragancia' : matches.length + ' fragancias';
+  byId('empty-results').hidden = !products.length || matches.length > 0;
+  renderFilterSummary();
+}
+
+function renderFilterSummary() {
+  const facets = [brand, family, priceBand, availability].filter((control) => control.value);
+  const count = byId('filter-count');
+  count.textContent = String(facets.length);
+  count.hidden = !facets.length;
+  byId('clear-search').hidden = !search.value;
+  const selected = [...facets];
+  if (search.value.trim()) selected.unshift(search);
+  if (sort.value !== 'default') selected.push(sort);
+  byId('active-filters').hidden = !selected.length;
+  byId('filter-chips').replaceChildren(...selected.map((control) => {
+    const label = control === search ? '“' + search.value.trim() + '”' : control.selectedOptions[0].text;
+    const chip = element('button', 'filter-chip', label);
+    chip.type = 'button';
+    chip.setAttribute('aria-label', 'Quitar ' + label);
+    chip.addEventListener('click', () => {
+      control.value = control === sort ? 'default' : '';
+      render();
+      (control.closest('[hidden]') ? byId('filter-toggle') : control).focus();
+    });
+    return chip;
+  }));
 }
 
 async function loadCatalog() {
@@ -298,11 +377,18 @@ async function loadCatalog() {
     byId('footer-hours').textContent = settings.hours || '';
     byId('footer-hours').hidden = !settings.hours;
     byId('footer-payments').textContent = options.filter(([key]) => key !== 'coordinate').map(([, label]) => label).join(' · ');
-    const families = [...new Set(products.map((product) => product.family).filter(Boolean))];
-    families.sort(collator.compare);
-    family.options.length = 1;
-    families.forEach((name) => family.add(new Option(name, name)));
-    byId('family-field').hidden = !families.length;
+    catalogEntries = products.map(catalogEntry);
+    populateFacet(brand, 'brand');
+    populateFacet(family, 'family');
+    const hasPrices = catalogEntries.some((entry) => entry.price !== null);
+    byId('price-field').hidden = !hasPrices;
+    if (!hasPrices) {
+      priceBand.value = '';
+      if (sort.value === 'low' || sort.value === 'high') sort.value = 'default';
+    }
+    for (const option of sort.options) {
+      if (option.value === 'low' || option.value === 'high') option.disabled = !hasPrices;
+    }
     byId('filters').hidden = !products.length;
     render();
     renderCart();
@@ -313,8 +399,21 @@ async function loadCatalog() {
 }
 
 search.addEventListener('input', render);
-family.addEventListener('change', render);
-sort.addEventListener('change', render);
+[brand, family, priceBand, availability, sort].forEach((control) => control.addEventListener('change', render));
+byId('filters').addEventListener('submit', (event) => { event.preventDefault(); render(); });
+byId('filter-toggle').addEventListener('click', (event) => {
+  const panel = byId('filter-panel');
+  panel.hidden = !panel.hidden;
+  event.currentTarget.setAttribute('aria-expanded', String(!panel.hidden));
+});
+byId('clear-search').addEventListener('click', () => { search.value = ''; render(); search.focus(); });
+function resetFilters() {
+  byId('filters').reset();
+  render();
+  search.focus();
+}
+byId('reset-filters').addEventListener('click', resetFilters);
+byId('show-all').addEventListener('click', resetFilters);
 retry.addEventListener('click', loadCatalog);
 
 const theme = byId('theme');
