@@ -77,7 +77,10 @@ function fail(res, error, fallback) {
 const reject = (message, status = 400) => Object.assign(new Error(message), { status });
 
 app.get('/api/store', async (req, res) => {
-  try { res.set('Cache-Control', 'no-store'); res.json(publicStore(await store.read())); }
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.json({ ...publicStore(await store.read()), mapsBrowserKey: process.env.GOOGLE_MAPS_BROWSER_KEY || '' });
+  }
   catch (e) { fail(res, e, 'No se pudo leer la tienda'); }
 });
 
@@ -198,14 +201,13 @@ app.post('/api/orders/request', async (req, res) => {
     const area = txt(body.area, 100);
     const address = txt(body.address, 240);
     const reference = txt(body.reference, 160);
-    const pin = String(body.mapPin || '').trim();
-    if (pin && (pin.length > 2048 || !delivery.mapPin(pin))) throw reject('Revisa el enlace compartido de Google Maps.');
+    const placeId = body.placeId || '';
+    if (typeof placeId !== 'string' || !/^[A-Za-z0-9_-]{0,512}$/.test(placeId)) throw reject('Vuelve a elegir la dirección en Google Maps.');
     if (!/^\d{8,20}$/.test(settings.whatsapp || '') || typeof payment !== 'string' || !payment) {
       throw reject('Este método de pedido no está disponible.');
     }
-    if (!name || !delivery.provinces.includes(province) || !area || !address) {
-      throw reject('Completa el nombre, la provincia, la localidad y la dirección de entrega.');
-    }
+    if (!name || !address) throw reject('Completa el nombre y la dirección de entrega.');
+    if (!delivery.districtsFor(province).includes(area)) throw reject('Elige un distrito de la provincia seleccionada.');
     const basket = orderLines(data, body);
     const order = { id: crypto.randomUUID(), items: basket.map(({ product, quantity }) => ({ productId: product.id, quantity })) };
     const payload = Buffer.from(JSON.stringify(order)).toString('base64url');
@@ -219,9 +221,9 @@ app.post('/api/orders/request', async (req, res) => {
       body.payment === 'yappy' && 'Enviaré el comprobante de Yappy en este chat después de confirmar el total.',
       `Nombre: ${name}`,
       `Provincia: ${province}`,
-      `Localidad: ${area}`,
+      `Distrito: ${area}`,
       `Dirección: ${address}`,
-      'Google Maps: ' + (delivery.mapPin(pin) || delivery.mapSearch(address, area, province)),
+      'Google Maps: ' + delivery.deliveryMap(address, area, province, placeId),
       reference && `Referencia: ${reference}`,
       `Código del pedido: ${code}`,
     ];

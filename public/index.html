@@ -12,11 +12,12 @@
 <link rel="stylesheet" href="/storefront.css">
 <script src="/cart-prices.js" defer></script>
 <script src="/delivery.js" defer></script>
+<script src="/checkout-delivery.js" defer></script>
 <script src="/storefront.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#catalogo">Saltar al catálogo</a>
-<div class="topline">Perfumería en Ciudad de Panamá</div>
+<div class="topline"><div class="shell"><span>Perfumería en Ciudad de Panamá</span><a data-contact target="_blank" rel="noopener" hidden>Atención por WhatsApp <span aria-hidden="true">↗</span></a></div></div>
 <header class="site-header">
   <div class="shell header-inner">
     <a class="wordmark" href="#inicio">Bell Aroma</a>
@@ -34,17 +35,19 @@
 <main id="inicio">
   <section class="shell hero" aria-labelledby="titulo">
     <div class="hero-copy">
-      <h1 id="titulo">Un aroma que deja huella.</h1>
+      <h1 id="titulo">Un aroma que <em>deja huella.</em></h1>
       <p>Encuentra una fragancia para cada día, una ocasión especial o un regalo que se recuerde.</p>
-      <a class="button primary" href="#catalogo">Comprar perfumes</a>
+      <div class="hero-actions"><a class="button primary" href="#catalogo">Comprar perfumes <span aria-hidden="true">→</span></a><a class="text-action" href="#aroma">Guía de aromas</a></div>
     </div>
-    <a class="hero-photo" href="#catalogo" aria-label="Explorar el catálogo de perfumes">
-      <img src="/products/village-of-new-york.png" alt="" width="425" height="530" fetchpriority="high">
-    </a>
+    <figure class="hero-photo">
+      <div class="hero-portrait"><img src="/products/village-of-new-york.png" alt="Frasco verde y dorado de Village of New York" width="423" height="530" fetchpriority="high"></div>
+      <figcaption>Village of New York</figcaption>
+    </figure>
   </section>
   <section class="shell catalog" id="catalogo" aria-labelledby="catalog-title">
     <div class="section-heading">
       <div><h2 id="catalog-title">Catálogo de perfumes</h2><p class="muted">Encuentra tu próximo perfume por nombre, marca o familia olfativa.</p></div>
+      <p id="catalog-status" class="muted" role="status">Cargando catálogo…</p>
     </div>
     <form class="catalog-tools" id="filters" role="search" aria-label="Buscar y filtrar perfumes" hidden>
       <div class="catalog-toolbar">
@@ -79,7 +82,6 @@
         <div id="filter-chips"></div><button class="reset-filters" id="reset-filters" type="button">Limpiar todo</button>
       </div>
     </form>
-    <p id="catalog-status" class="muted" role="status">Cargando catálogo…</p>
     <button class="button secondary" id="retry" type="button" hidden>Volver a intentar</button>
     <div class="product-grid" id="products"></div>
     <div class="empty-results" id="empty-results" hidden>
@@ -89,7 +91,7 @@
     <noscript><p>Activa JavaScript para explorar el catálogo.</p></noscript>
   </section>
   <section class="shell guide" id="aroma" aria-labelledby="guide-title">
-    <div><h2 id="guide-title">¿Qué aroma va contigo?</h2><p class="muted">Explora las familias olfativas para saber qué notas buscar.</p></div>
+    <div class="guide-copy"><h2 id="guide-title">¿Qué aroma va contigo?</h2><p class="muted">Explora las familias olfativas para saber qué notas buscar.</p></div>
     <div class="families">
       <details><summary>Floral</summary><p>Busca notas de rosa, jazmín o peonía.</p></details>
       <details><summary>Cítrico y fresco</summary><p>Busca notas de bergamota, limón o té verde.</p></details>
@@ -99,7 +101,7 @@
     </div>
   </section>
   <section class="shell visit" id="visitanos" aria-labelledby="visit-title">
-    <div><h2 id="visit-title">Pruébalos en tienda</h2><p>Visita Bell Aroma en Ciudad de Panamá y descubre cómo evoluciona cada fragancia en tu piel.</p></div>
+    <div><h2 id="visit-title">Pruébalos en tienda</h2><p id="visit-address">Ciudad de Panamá</p><p id="visit-hours" hidden></p></div>
     <div class="actions">
       <a class="button primary" data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Cómo llegar</a>
       <a class="button secondary" data-contact target="_blank" rel="noopener" hidden>Consultar por WhatsApp</a>
@@ -127,16 +129,25 @@
     <p class="muted" id="cart-help" role="status"></p>
     <button class="button secondary" id="continue-shopping" type="button">Seguir comprando</button>
     <button class="button primary" id="checkout-next" type="button" hidden>Continuar con la compra</button>
+    <button class="text-action" id="edit-cart" type="button" hidden>← Volver al carrito</button>
   <form id="order-form" hidden>
     <fieldset class="order-group"><legend>Entrega</legend>
     <div class="checkout-fields">
       <label class="wide">Nombre de quien recibe<input name="name" autocomplete="name" maxlength="100" required></label>
-      <label>Provincia<select id="order-province" name="province" autocomplete="address-level1" required><option value="">Elige tu provincia</option></select></label>
-      <label>Distrito o corregimiento<input name="area" autocomplete="address-level2" maxlength="100" required></label>
-      <label class="wide">Dirección de entrega<textarea name="address" autocomplete="street-address" maxlength="240" rows="2" required placeholder="Calle, edificio o número de casa"></textarea></label>
-      <div class="wide map-field">
-        <a class="map-link" id="delivery-map" target="_blank" rel="noopener" hidden>Buscar esta dirección en Google Maps</a>
-        <label>Enlace de Google Maps (opcional)<input name="mapPin" id="map-pin" type="url" inputmode="url" maxlength="2048" placeholder="Pega el enlace de tu ubicación"></label>
+      <div class="region-field">
+        <span id="province-label">Provincia</span>
+        <button type="button" id="order-province" aria-labelledby="province-label order-province" aria-expanded="false" aria-controls="province-options">Elige tu provincia</button>
+        <div class="region-options" id="province-options" role="group" aria-labelledby="province-label" hidden></div>
+      </div>
+      <div class="region-field">
+        <span id="district-label">Distrito</span>
+        <button type="button" id="order-district" aria-labelledby="district-label order-district" aria-expanded="false" aria-controls="district-options" disabled>Elige una provincia primero</button>
+        <div class="region-options" id="district-options" role="group" aria-labelledby="district-label" hidden></div>
+      </div>
+      <div class="wide address-field">
+        <label id="address-label" for="order-address">Dirección de entrega</label>
+        <input id="order-address" name="address" autocomplete="street-address" maxlength="240" required placeholder="Calle, edificio o número de casa">
+        <p class="field-help" id="address-help" role="status"></p>
       </div>
       <label class="wide">Punto de referencia (opcional)<input name="reference" maxlength="160"></label>
     </div></fieldset>

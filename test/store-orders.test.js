@@ -68,9 +68,16 @@ test('inventario concurrente y entregas por WhatsApp', async (t) => {
     assert.equal(message.includes('comprobante'), payment === 'yappy');
     assert.ok(message.includes(delivery.mapSearch(order.address, order.area, order.province)));
   }
-  const pin = 'https://maps.app.goo.gl/example';
-  const shared = await send('POST', '/api/orders/request', { ...order, mapPin: pin });
-  assert.ok(new URL(shared.url).searchParams.get('text').includes(pin));
+  const placeId = 'ChIJ_fixture-123';
+  const selected = await send('POST', '/api/orders/request', { ...order, placeId });
+  const message = new URL(selected.url).searchParams.get('text');
+  const map = new URL(message.split('\n').find(line => line.startsWith('Google Maps: ')).slice('Google Maps: '.length));
+  assert.equal(map.searchParams.get('query_place_id'), placeId);
+  assert.ok(message.includes('Distrito: La Chorrera'));
+  assert.equal(delivery.provinces.length, 10);
+  assert.equal(delivery.provinces.flatMap(delivery.districtsFor).length, 70);
   await send('POST', '/api/orders/request', { ...order, province: 'Centro' }, 400);
-  await send('POST', '/api/orders/request', { ...order, mapPin: 'https://example.org/' }, 400);
+  await send('POST', '/api/orders/request', { ...order, province: 'Panamá' }, 400);
+  await send('POST', '/api/orders/request', { ...order, area: '' }, 400);
+  await send('POST', '/api/orders/request', { ...order, placeId: 'https://example.org/' }, 400);
 });

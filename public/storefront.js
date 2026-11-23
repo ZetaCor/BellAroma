@@ -35,19 +35,8 @@ const checkout = byId('checkout');
 const orderForm = byId('order-form');
 const payment = byId('order-payment');
 const checkoutStatus = byId('checkout-status');
-const province = byId('order-province');
-Delivery.provinces.forEach((name) => province.add(new Option(name, name)));
-function updateDeliveryMap() {
-  const { area, address, mapPin } = orderForm.elements;
-  const pin = Delivery.mapPin(mapPin.value.trim());
-  mapPin.setCustomValidity(mapPin.value.trim() && !pin ? 'Pega el enlace compartido desde Google Maps.' : '');
-  const link = byId('delivery-map');
-  link.hidden = !province.value && !pin;
-  link.href = pin || Delivery.mapSearch(address.value.trim(), area.value.trim(), province.value);
-  link.textContent = pin ? 'Ver ubicación compartida en Google Maps' : 'Buscar esta dirección en Google Maps';
-}
-orderForm.addEventListener('input', updateDeliveryMap);
-province.addEventListener('change', updateDeliveryMap);
+const checkoutDelivery = setupCheckoutDelivery(orderForm);
+let mapsBrowserKey = '';
 
 function paymentOptions() {
   const options = [
@@ -162,6 +151,11 @@ function renderCart() {
   else if (!whatsapp) help = 'La tienda aún no ha habilitado las compras por WhatsApp.';
   byId('cart-help').textContent = help;
   if (!valid) orderForm.hidden = true;
+  byId('cart-items').hidden = !orderForm.hidden;
+  byId('continue-shopping').hidden = !orderForm.hidden;
+  byId('edit-cart').hidden = orderForm.hidden;
+  byId('cart-help').hidden = !orderForm.hidden;
+  byId('checkout-title').textContent = orderForm.hidden ? 'Tu carrito' : 'Entrega y pago';
   byId('checkout-next').hidden = !valid || !orderForm.hidden;
   byId('order-submit').disabled = !whatsapp;
 }
@@ -173,20 +167,30 @@ byId('continue-shopping').addEventListener('click', () => {
 });
 byId('checkout-next').addEventListener('click', () => {
   orderForm.hidden = false;
-  byId('checkout-next').hidden = true;
-  updateDeliveryMap();
+  renderCart();
+  checkoutDelivery.enableMaps(mapsBrowserKey);
   orderForm.elements.name.focus();
 });
+byId('edit-cart').addEventListener('click', () => {
+  orderForm.hidden = true;
+  renderCart();
+  byId('checkout-next').focus();
+});
 
+function orderBody() {
+  return JSON.stringify({
+    ...Object.fromEntries(new FormData(orderForm)), ...checkoutDelivery.addressData(),
+    items: cart, payment: payment.value,
+  });
+}
 orderForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!whatsapp) return;
+  if (!whatsapp || !checkoutDelivery.validateAddress()) return;
   const button = byId('order-submit');
   button.disabled = true;
   checkoutStatus.textContent = 'Preparando pedido…';
   try {
-    const fields = Object.fromEntries(new FormData(orderForm));
-    const body = JSON.stringify({ ...fields, items: cart, payment: payment.value });
+    const body = orderBody();
     if (lastRequest?.body !== body) {
       const response = await fetch('/api/orders/request', {
         method: 'POST',
@@ -198,7 +202,7 @@ orderForm.addEventListener('submit', async (event) => {
         if (response.status === 409) await loadCatalog();
         throw new Error(result.error);
       }
-      if (!checkout.open || body !== JSON.stringify({ ...Object.fromEntries(new FormData(orderForm)), items: cart, payment: payment.value })) {
+      if (!checkout.open || orderForm.hidden || body !== orderBody()) {
         throw new Error('El pedido cambió. Revisa el carrito antes de enviarlo.');
       }
       lastRequest = { body, url: result.url };
@@ -233,7 +237,10 @@ function contactUrl(message) {
 function productCard(product) {
   const card = element('article', 'product');
   const photo = element('div', 'product-photo');
-  const placeholder = () => { photo.textContent = 'Foto no disponible'; };
+  const placeholder = () => {
+    photo.querySelector('img')?.remove();
+    photo.prepend('Foto no disponible');
+  };
   if (/^(\/(?!\/)|https:\/\/)/.test(product.image || '')) {
     const image = element('img', '');
     image.alt = product.name;
@@ -250,12 +257,12 @@ function productCard(product) {
   if (product.brand) info.append(element('p', 'brand-name', product.brand));
   info.append(element('h3', '', product.name));
   const details = [product.size, product.family].filter(Boolean).join(' · ');
-  if (details) info.append(element('p', 'muted', details));
-  if (product.description) info.append(element('p', '', product.description));
-  info.append(element('p', 'price', product.price || 'Precio a consultar'));
+  if (details) info.append(element('p', 'product-details', details));
+  if (product.description) info.append(element('p', 'product-description', product.description));
   const soldOut = product.available === false || product.stock === 0;
-  if (soldOut) info.append(element('p', 'muted', 'Agotado'));
+  if (soldOut) photo.append(element('span', 'stock-label', 'Agotado'));
   const actions = element('div', 'product-actions');
+  actions.append(element('p', 'price', product.price || 'Precio a consultar'));
   if (!soldOut) {
     const button = element('button', 'button primary', 'Agregar al carrito');
     button.type = 'button';
@@ -375,6 +382,7 @@ async function loadCatalog() {
     products = data.products;
     catalogReady = true;
     settings = data.settings || {};
+    mapsBrowserKey = data.mapsBrowserKey || '';
     const number = String(settings.whatsapp || '').replace(/\D/g, '');
     whatsapp = /^\d{8,20}$/.test(number) ? number : '';
     document.querySelectorAll('[data-contact]').forEach((link) => {
@@ -388,11 +396,14 @@ async function loadCatalog() {
     if (options.some(([key]) => key === previous)) payment.value = previous;
     paymentInstructions();
     byId('footer-address').textContent = settings.address || 'Ciudad de Panamá';
+    byId('visit-address').textContent = byId('footer-address').textContent;
     document.querySelectorAll('[data-store-map]').forEach((link) => {
       link.href = Delivery.mapPin(settings.mapPin) || (settings.address ? Delivery.mapSearch(settings.address) : 'https://maps.app.goo.gl/NAjTqhjoNM2oH7k16');
     });
     byId('footer-hours').textContent = settings.hours || '';
     byId('footer-hours').hidden = !settings.hours;
+    byId('visit-hours').textContent = settings.hours || '';
+    byId('visit-hours').hidden = !settings.hours;
     byId('footer-payments').textContent = options.filter(([key]) => key !== 'coordinate').map(([, label]) => label).join(' · ');
     catalogEntries = products.map(catalogEntry);
     populateFacet(brand, 'brand');
