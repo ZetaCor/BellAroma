@@ -76,5 +76,28 @@
   <a class="wordmark" href="#inicio">Bell Aroma</a>
   <a href="https://www.instagram.com/bell_aroma_oficial" target="_blank" rel="noopener">@bell_aroma_oficial</a>
 </footer>
+<dialog id="checkout" aria-labelledby="checkout-title">
+  <form id="order-form">
+    <div class="checkout-heading">
+      <h2 id="checkout-title">Solicitar pedido</h2>
+      <button class="theme-button" id="checkout-close" type="button" aria-label="Cerrar pedido">×</button>
+    </div>
+    <p id="order-product"></p>
+    <p class="muted">La tienda confirmará por WhatsApp el total, el costo de envío y la disponibilidad.</p>
+    <div class="checkout-fields">
+      <label>Cantidad<input id="order-quantity" type="number" min="1" step="1" required></label>
+      <label>Método de pago<select id="order-payment" required></select></label>
+      <p class="muted wide" id="order-payment-help"></p>
+      <label>Nombre completo<input name="name" autocomplete="name" maxlength="100" required></label>
+      <label>Teléfono<input name="phone" type="tel" autocomplete="tel" maxlength="30" required></label>
+      <label class="wide">Provincia, distrito y corregimiento<input name="area" maxlength="100" required></label>
+      <label class="wide">Dirección de entrega<textarea name="address" autocomplete="street-address" maxlength="240" rows="2" required placeholder="Calle, edificio o número de casa"></textarea></label>
+      <label class="wide">Punto de referencia (opcional)<input name="reference" maxlength="160"></label>
+    </div>
+    <p class="muted">Los datos de entrega se incluyen en el mensaje que envías al comercio.</p>
+    <button class="button primary" id="order-submit" type="submit">Continuar a WhatsApp</button>
+    <p id="checkout-status" role="status"></p>
+  </form>
+</dialog>
 </body>
 </html>

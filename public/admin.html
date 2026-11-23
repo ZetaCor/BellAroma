@@ -58,10 +58,25 @@ textarea{min-height:80px;resize:vertical}
     </div>
 
     <div class="card">
-      <h2>WhatsApp de la tienda</h2>
+      <h2>Pedidos y métodos de pago</h2>
       <label for="wa">Número con código de país, sin + (ej. 50760000000)</label>
       <input id="wa" inputmode="numeric">
-      <div class="bar"><button class="btn" id="saveWa" type="button">Guardar número</button></div>
+      <label for="yappy">Alias de Yappy Comercial</label>
+      <input id="yappy" maxlength="60" aria-describedby="yappy-help">
+      <p id="yappy-help">Completa el alias para ofrecer Yappy. Confirma el total y verifica el pago en Yappy Comercial.</p>
+      <label class="chk"><input id="cash" type="checkbox"> Efectivo contra entrega</label>
+      <label class="chk"><input id="card" type="checkbox"> Tarjeta contra entrega (POS)</label>
+      <div class="bar"><button class="btn" id="saveWa" type="button" disabled>Guardar métodos de pago</button><span id="payment-status" role="status"></span></div>
+    </div>
+
+    <div class="card">
+      <h2>Finalizar pedido</h2>
+      <p>Copia el código recibido por WhatsApp. Finaliza el pedido después de confirmar la venta y el cobro.</p>
+      <form id="complete-order">
+        <label for="order-code">Código del pedido</label>
+        <input id="order-code" required maxlength="500" autocomplete="off" spellcheck="false">
+        <div class="bar"><button class="btn" id="complete-button" type="submit">Revisar pedido</button><span id="order-status" role="status"></span></div>
+      </form>
     </div>
 
     <div class="card">
@@ -79,7 +94,9 @@ textarea{min-height:80px;resize:vertical}
       <label for="desc">Descripción corta</label><textarea id="desc" maxlength="500"></textarea>
       <label for="file">Foto</label><input id="file" type="file" accept="image/*">
       <img id="prev" alt="Vista previa">
-      <label class="chk"><input id="avail" type="checkbox" checked> Disponible</label>
+      <label for="stock">Unidades en inventario *</label>
+      <input id="stock" type="number" min="0" max="999999" step="1" required>
+      <label class="chk"><input id="avail" type="checkbox" checked> Disponible para venta</label>
       <div class="bar">
         <button class="btn main" id="save" type="button">Guardar producto</button>
         <button class="btn" id="cancel" type="button" hidden>Cancelar edición</button>
@@ -100,7 +117,7 @@ textarea{min-height:80px;resize:vertical}
 var $ = function (id) { return document.getElementById(id); };
 var token = localStorage.getItem("ba-token") || "";
 var data = { settings: { whatsapp: "" }, products: [] };
-var editing = null, newImage = null, newCut = false;
+var editing = null, editingVersion, newImage = null, newCut = false;
 
 function say(t, err) { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; }
 function api(method, url, body) {
@@ -130,7 +147,13 @@ function load() {
     if (!r.ok) throw new Error("No se pudo cargar el catálogo.");
     return r.json();
   }).then(function (d) {
-    data = d; $("wa").value = (d.settings && d.settings.whatsapp) || ""; render();
+    data = d;
+    $("wa").value = d.settings?.whatsapp || "";
+    $("yappy").value = d.settings?.yappyAlias || "";
+    $("cash").checked = d.settings?.cashOnDelivery === true;
+    $("card").checked = d.settings?.cardOnDelivery === true;
+    $("saveWa").disabled = false;
+    render();
     $("import-catalog").disabled = false;
   }).catch(function (e) { say(e.message, true); });
 }
@@ -156,11 +179,7 @@ $("import-catalog").onclick = async function () {
     if (data.products.length + additions.length > 500) {
       throw new Error("El catálogo admite hasta 500 productos.");
     }
-    data = await api("PUT", "/api/store", {
-      settings: data.settings,
-      products: data.products.concat(additions)
-    });
-    render();
+    await persist({ ...data, products: data.products.concat(additions) });
     status.textContent = "Perfumes agregados. Completa sus datos desde el panel.";
   } catch (error) {
     status.textContent = error.message;
@@ -168,10 +187,57 @@ $("import-catalog").onclick = async function () {
     button.disabled = false;
   }
 };
-function persist(msg) {
-  return api("PUT", "/api/store", data).then(function (d) { data = d; render(); say(msg); }).catch(function (e) { say(e.message, true); });
+async function persist(next) {
+  data = await api("PUT", "/api/store", next);
+  render();
 }
-$("saveWa").onclick = function () { data.settings.whatsapp = $("wa").value; persist("Número guardado."); };
+$("saveWa").onclick = async function () {
+  const button = $("saveWa");
+  const status = $("payment-status");
+  button.disabled = true;
+  try {
+    await persist({ ...data, settings: {
+      whatsapp: $("wa").value,
+      yappyAlias: $("yappy").value,
+      cashOnDelivery: $("cash").checked,
+      cardOnDelivery: $("card").checked,
+    } });
+    status.textContent = "Métodos de pago guardados.";
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+$("complete-order").onsubmit = async function (event) {
+  event.preventDefault();
+  const button = $("complete-button");
+  const status = $("order-status");
+  const code = $("order-code").value.trim();
+  button.disabled = true;
+  status.textContent = "";
+  try {
+    const review = await api("POST", "/api/orders/complete", { code });
+    if (review.alreadyCompleted) {
+      data = review;
+      render();
+      status.textContent = "Este pedido ya se finalizó.";
+      return;
+    }
+    if (!confirm(`¿Finalizar el pedido de ${review.quantity} × ${review.name} y descontar las unidades?`)) return;
+    const result = await api("POST", "/api/orders/complete", { code, confirm: true });
+    data = result;
+    render();
+    $("order-code").value = "";
+    status.textContent = result.alreadyCompleted ? "Este pedido ya se finalizó." :
+      `Pedido finalizado. Quedan ${result.stock} unidades de ${result.name}.`;
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 
 function resize(file) {
   return new Promise(function (ok, no) {
@@ -197,7 +263,7 @@ $("file").onchange = function () {
 
 function clearForm() {
   editing = null; newImage = null; newCut = false;
-  ["name", "brand", "size", "price", "desc", "file"].forEach(function (k) { $(k).value = ""; });
+  ["name", "brand", "size", "price", "desc", "file", "stock"].forEach(function (k) { $(k).value = ""; });
   $("family").value = ""; $("avail").checked = true; $("prev").style.display = "none";
   $("ftitle").textContent = "Nuevo producto"; $("cancel").hidden = true;
 }
@@ -206,23 +272,31 @@ $("cancel").onclick = function () { clearForm(); say(""); };
 $("save").onclick = function () {
   var name = $("name").value.trim();
   if (!name) { say("Escribe el nombre del producto.", true); return; }
+  if (!$("stock").reportValidity()) return;
+  if (editing && editingVersion !== data.version) {
+    say("El catálogo cambió. Abre el producto de nuevo para editar sus existencias.", true);
+    return;
+  }
+  const snapshot = data;
+  const stock = $("stock").valueAsNumber;
   $("save").disabled = true; say("Guardando…");
   var old = editing ? data.products.find(function (p) { return p.id === editing; }) : null;
   var step = newImage ? api("POST", "/api/upload", { image: newImage }).then(function (r) { return r.url; }) : Promise.resolve(old ? old.image : "");
   step.then(function (img) {
     var p = {
-      id: old ? old.id : "p" + Date.now().toString(36), name: name, brand: $("brand").value, family: $("family").value,
-      size: $("size").value, price: $("price").value, description: $("desc").value, image: img, available: $("avail").checked, cutout: newImage ? newCut : !!(old && old.cutout)
+      id: old ? old.id : crypto.randomUUID(), name: name, brand: $("brand").value, family: $("family").value,
+      size: $("size").value, price: $("price").value, description: $("desc").value, image: img, available: $("avail").checked, stock, cutout: newImage ? newCut : !!(old && old.cutout)
     };
-    if (old) data.products[data.products.indexOf(old)] = p; else data.products.unshift(p);
-    return persist("Producto guardado.");
-  }).then(function () { clearForm(); }).catch(function (e) { say(e.message, true); }).then(function () { $("save").disabled = false; });
+    const products = old ? snapshot.products.map((item) => item.id === p.id ? p : item) : [p, ...snapshot.products];
+    return persist({ ...snapshot, products });
+  }).then(function () { clearForm(); say("Producto guardado."); }).catch(function (e) { say(e.message, true); }).then(function () { $("save").disabled = false; });
 };
 
 function edit(p) {
-  editing = p.id; newImage = null;
+  editing = p.id; editingVersion = data.version; newImage = null;
   $("name").value = p.name; $("brand").value = p.brand; $("family").value = p.family; $("size").value = p.size;
   $("price").value = p.price; $("desc").value = p.description; $("avail").checked = p.available;
+  $("stock").value = p.stock ?? "";
   if (p.image) { $("prev").src = p.image; $("prev").style.display = "block"; } else $("prev").style.display = "none";
   $("ftitle").textContent = "Editar producto"; $("cancel").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -237,13 +311,26 @@ function render() {
     var im = document.createElement("img"); im.className = "thumb"; im.alt = ""; if (p.image) im.src = p.image;
     var g = document.createElement("div"); g.className = "grow";
     var b = document.createElement("b"); b.textContent = p.name;
-    var s = document.createElement("span"); s.textContent = [p.brand, p.size, p.price, p.available ? "" : "Agotado"].filter(Boolean).join(" · ");
+    var s = document.createElement("span");
+    const stock = p.stock == null ? "Inventario pendiente" : `${p.stock} en inventario`;
+    s.textContent = [p.brand, p.size, p.price, stock, (!p.available || p.stock === 0) ? "Agotado" : ""].filter(Boolean).join(" · ");
     g.appendChild(b); g.appendChild(s);
     var a = document.createElement("div"); a.className = "acts";
-    a.appendChild(btn(p.available ? "Marcar agotado" : "Marcar disponible", "", function () { p.available = !p.available; persist("Actualizado."); }));
+    a.appendChild(btn(p.available ? "Marcar agotado" : "Marcar disponible", "", async function () {
+      try {
+        await persist({ ...data, products: data.products.map((item) =>
+          item.id === p.id ? { ...item, available: !item.available } : item
+        ) });
+        say("Disponibilidad actualizada.");
+      } catch (error) { say(error.message, true); }
+    }));
     a.appendChild(btn("Editar", "", function () { edit(p); }));
-    a.appendChild(btn("Eliminar", "del", function () {
-      if (confirm("¿Eliminar “" + p.name + "”?")) { data.products = data.products.filter(function (x) { return x.id !== p.id; }); persist("Producto eliminado."); }
+    a.appendChild(btn("Eliminar", "del", async function () {
+      if (!confirm("¿Eliminar “" + p.name + "”?")) return;
+      try {
+        await persist({ ...data, products: data.products.filter((item) => item.id !== p.id) });
+        say("Producto eliminado.");
+      } catch (error) { say(error.message, true); }
     }));
     row.appendChild(im); row.appendChild(g); row.appendChild(a); l.appendChild(row);
   });
