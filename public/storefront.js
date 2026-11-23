@@ -1,5 +1,4 @@
 ﻿const byId = (id) => document.getElementById(id);
-const instagram = 'https://www.instagram.com/bell_aroma_oficial';
 const search = byId('search');
 const family = byId('family');
 const sort = byId('sort');
@@ -11,19 +10,34 @@ const collator = new Intl.Collator('es', { sensitivity: 'base' });
 let products = [];
 let whatsapp = '';
 let settings = {};
-let selectedProduct;
+let cart = [];
+try {
+  const saved = JSON.parse(localStorage.getItem('ba-cart') || '[]');
+  if (Array.isArray(saved)) {
+    const seen = new Set();
+    cart = saved.filter((item) => {
+      if (!item || typeof item.productId !== 'string' || seen.has(item.productId) ||
+          !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 999999) return false;
+      seen.add(item.productId);
+      return true;
+    });
+  }
+} catch {}
+let catalogReady = false;
+let noticeTimeout;
+let lastRequest;
 const checkout = byId('checkout');
 const orderForm = byId('order-form');
 const payment = byId('order-payment');
-const quantity = byId('order-quantity');
 const checkoutStatus = byId('checkout-status');
 
 function paymentOptions() {
-  return [
+  const options = [
     settings.yappyAlias && ['yappy', 'Yappy'],
     settings.cashOnDelivery && ['cash', 'Efectivo contra entrega'],
     settings.cardOnDelivery && ['card', 'Tarjeta contra entrega (POS)'],
   ].filter(Boolean);
+  return options.length ? options : [['coordinate', 'A coordinar por WhatsApp']];
 }
 
 function paymentInstructions() {
@@ -31,42 +45,151 @@ function paymentInstructions() {
     yappy: 'En Yappy, busca el comercio con el alias ' + settings.yappyAlias + '. Espera la confirmación del total antes de pagar.',
     cash: 'Paga en efectivo al recibir el pedido.',
     card: 'Paga con tarjeta usando el POS del repartidor al recibir el pedido.',
+    coordinate: 'Acuerda el método de pago con la tienda al enviar el pedido.',
   };
   byId('order-payment-help').textContent = instructions[payment.value] || '';
 }
 
-function openCheckout(product) {
-  selectedProduct = product;
-  orderForm.reset();
+function cartProduct(id) {
+  return products.find((p) => p.id === id);
+}
+
+function saveCart() {
+  try { localStorage.setItem('ba-cart', JSON.stringify(cart)); } catch {}
+  lastRequest = null;
   checkoutStatus.textContent = '';
-  byId('order-product').textContent = [product.name, product.size, product.price || 'Precio a consultar'].filter(Boolean).join(' · ');
-  quantity.value = '1';
-  quantity.max = String(product.stock);
-  payment.replaceChildren(new Option('Selecciona un método', ''), ...paymentOptions().map(([key, label]) => new Option(label, key)));
-  paymentInstructions();
+  renderCart();
+}
+
+function notifyCart(message) {
+  byId('cart-notice').hidden = false;
+  byId('notice-text').textContent = message;
+  clearTimeout(noticeTimeout);
+  noticeTimeout = setTimeout(() => { byId('cart-notice').hidden = true; }, 4000);
+}
+
+function addToCart(product) {
+  const item = cart.find((entry) => entry.productId === product.id);
+  const next = (item?.quantity || 0) + 1;
+  if (next > (product.stock ?? 999999)) return notifyCart('Ya agregaste todas las unidades disponibles.');
+  if (item) item.quantity = next;
+  else cart.push({ productId: product.id, quantity: 1 });
+  saveCart();
+  notifyCart(product.name + ' se agregó al carrito.');
+}
+
+function openCart() {
+  byId('cart-notice').hidden = true;
+  orderForm.hidden = true;
+  renderCart();
   checkout.showModal();
 }
 
+function cartRow(item, product) {
+  const row = element('div', 'cart-row');
+  if (product?.image) {
+    const image = element('img', 'cart-photo');
+    image.src = product.image;
+    image.alt = '';
+    row.append(image);
+  }
+  const info = element('div', 'cart-line');
+  const name = product?.name || 'Perfume retirado del catálogo';
+  info.append(element('strong', '', name));
+  if (product) info.append(element('small', 'muted', [product.size, product.price || 'Precio por confirmar'].filter(Boolean).join(' · ')));
+  if (product && (product.available === false || product.stock === 0)) {
+    info.append(element('small', 'muted', 'Agotado'));
+  } else if (product?.stock != null && item.quantity > product.stock) {
+    info.append(element('small', 'muted', 'Unidades disponibles: ' + product.stock));
+  }
+  const controls = element('div', 'quantity-controls');
+  function action(label, description, change) {
+    const button = element('button', '', label);
+    button.type = 'button';
+    button.setAttribute('aria-label', description + ' ' + name);
+    button.addEventListener('click', () => {
+      change();
+      saveCart();
+      const replacement = Array.from(byId('cart-items').querySelectorAll('button')).find((b) =>
+        !b.disabled && b.getAttribute('aria-label') === button.getAttribute('aria-label'));
+      (replacement || byId('continue-shopping')).focus({ preventScroll: true });
+    });
+    return button;
+  }
+  const less = action('−', 'Reducir cantidad de', () => { item.quantity--; });
+  less.disabled = item.quantity <= 1;
+  const more = action('+', 'Aumentar cantidad de', () => { item.quantity++; });
+  more.disabled = !product || product.available === false || item.quantity >= (product.stock ?? 999999);
+  const remove = action('Quitar', 'Quitar', () => { cart = cart.filter((entry) => entry !== item); });
+  controls.append(less, element('span', '', String(item.quantity)), more, remove);
+  info.append(controls);
+  row.append(info);
+  return row;
+}
+
+function renderCart() {
+  const units = cart.reduce((sum, item) => sum + item.quantity, 0);
+  byId('cart-count').textContent = String(units);
+  const basket = cart.map((item) => ({ ...item, product: cartProduct(item.productId) }));
+  byId('cart-items').replaceChildren(...(catalogReady ? basket.map((line, i) => cartRow(cart[i], line.product)) : []));
+  const allPresent = basket.every(({ product }) => product);
+  const valid = catalogReady && units && basket.every(({ product, quantity }) =>
+    product && product.available !== false && (product.stock == null || product.stock >= quantity));
+  byId('subtotal').textContent = CartPrices.format(allPresent ? CartPrices.total(basket) : null);
+  byId('cart-total').hidden = !units || !catalogReady;
+  let help = 'El envío y el total final se confirman por WhatsApp.';
+  if (!catalogReady) help = 'El catálogo debe estar cargado para revisar tu carrito.';
+  else if (!units) help = 'Tu carrito está vacío. Explora los perfumes y agrega tus favoritos.';
+  else if (!valid) help = 'Hay artículos con disponibilidad insuficiente. Ajusta sus cantidades o quítalos del carrito.';
+  else if (!whatsapp) help = 'La tienda aún no ha habilitado las compras por WhatsApp.';
+  byId('cart-help').textContent = help;
+  if (!valid) orderForm.hidden = true;
+  byId('checkout-next').hidden = !valid || !orderForm.hidden;
+  byId('order-submit').disabled = !whatsapp;
+}
+
+['open-cart', 'footer-cart', 'notice-open'].forEach((id) => byId(id).addEventListener('click', openCart));
+byId('continue-shopping').addEventListener('click', () => {
+  checkout.close();
+  location.hash = 'catalogo';
+});
+byId('checkout-next').addEventListener('click', () => {
+  orderForm.hidden = false;
+  byId('checkout-next').hidden = true;
+  payment.focus();
+});
+
 orderForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (!whatsapp) return;
   const button = byId('order-submit');
   button.disabled = true;
   checkoutStatus.textContent = 'Preparando pedido…';
   try {
     const fields = Object.fromEntries(new FormData(orderForm));
-    const response = await fetch('/api/orders/request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...fields, productId: selectedProduct.id, quantity: quantity.valueAsNumber, payment: payment.value }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error);
+    const body = JSON.stringify({ ...fields, items: cart, payment: payment.value });
+    if (lastRequest?.body !== body) {
+      const response = await fetch('/api/orders/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) await loadCatalog();
+        throw new Error(result.error);
+      }
+      if (!checkout.open || body !== JSON.stringify({ ...Object.fromEntries(new FormData(orderForm)), items: cart, payment: payment.value })) {
+        throw new Error('El pedido cambió. Revisa el carrito antes de enviarlo.');
+      }
+      lastRequest = { body, url: result.url };
+    }
     checkoutStatus.textContent = 'Envía el mensaje en WhatsApp para que la tienda reciba tu solicitud.';
-    location.assign(result.url);
+    location.assign(lastRequest.url);
   } catch (error) {
     checkoutStatus.textContent = error.message || 'No pudimos preparar el pedido. Vuelve a intentarlo.';
   } finally {
-    button.disabled = false;
+    button.disabled = !whatsapp;
   }
 });
 payment.addEventListener('change', paymentInstructions);
@@ -84,7 +207,7 @@ function element(tag, className, text) {
 }
 
 function contactUrl(message) {
-  return whatsapp ? 'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message) : instagram;
+  return 'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message);
 }
 
 function productCard(product) {
@@ -112,23 +235,25 @@ function productCard(product) {
   info.append(element('p', 'price', product.price || 'Precio a consultar'));
   const soldOut = product.available === false || product.stock === 0;
   if (soldOut) info.append(element('p', 'muted', 'Agotado'));
-  if (!soldOut && product.stock > 0 && whatsapp && paymentOptions().length) {
-    const button = element('button', 'button primary', 'Solicitar pedido');
+  const actions = element('div', 'product-actions');
+  if (!soldOut) {
+    const button = element('button', 'button primary', 'Agregar al carrito');
     button.type = 'button';
-    button.setAttribute('aria-label', 'Solicitar pedido de ' + product.name);
-    button.addEventListener('click', () => openCheckout(product));
-    info.append(button);
-    card.append(photo, info);
-    return card;
+    button.setAttribute('aria-label', 'Agregar ' + product.name + ' al carrito');
+    button.addEventListener('click', () => addToCart(product));
+    actions.append(button);
   }
-  const label = soldOut ? 'Consultar reposición' : 'Consultar fragancia';
-  const link = element('a', 'button secondary', label);
-  link.setAttribute('aria-label', label + ': ' + product.name + ' por ' + (whatsapp ? 'WhatsApp' : 'Instagram'));
-  link.href = contactUrl('Hola, vi ' + product.name + ' en Bell Aroma. ' +
-    (soldOut ? '¿Cuándo volverá a estar disponible?' : '¿Me confirman el precio y la disponibilidad?'));
-  link.target = '_blank';
-  link.rel = 'noopener';
-  info.append(link);
+  if (whatsapp) {
+    const label = soldOut ? 'Consultar reposición' : 'Consultar por WhatsApp';
+    const link = element('a', 'product-inquiry', label);
+    link.setAttribute('aria-label', label + ' · ' + product.name);
+    link.href = contactUrl('Hola, vi ' + [product.name, product.size].filter(Boolean).join(' · ') + ' en Bell Aroma. ' +
+      (soldOut ? '¿Cuándo volverá a estar disponible?' : '¿Me dan más información sobre esta fragancia?'));
+    link.target = '_blank';
+    link.rel = 'noopener';
+    actions.append(link);
+  }
+  info.append(actions);
   card.append(photo, info);
   return card;
 }
@@ -155,13 +280,24 @@ async function loadCatalog() {
     const data = await response.json();
     if (!Array.isArray(data.products)) throw new Error('Catálogo inválido');
     products = data.products;
+    catalogReady = true;
     settings = data.settings || {};
     const number = String(settings.whatsapp || '').replace(/\D/g, '');
     whatsapp = /^\d{8,20}$/.test(number) ? number : '';
     document.querySelectorAll('[data-contact]').forEach((link) => {
-      link.href = contactUrl('Hola, quisiera más información sobre las fragancias de Bell Aroma.');
-      link.textContent = whatsapp ? 'WhatsApp' : 'Instagram';
+      link.hidden = !whatsapp;
+      if (whatsapp) link.href = contactUrl('Hola, quisiera más información sobre las fragancias de Bell Aroma.');
+      else link.removeAttribute('href');
     });
+    const options = paymentOptions();
+    const previous = payment.value;
+    payment.replaceChildren(...options.map(([key, label]) => new Option(label, key)));
+    if (options.some(([key]) => key === previous)) payment.value = previous;
+    paymentInstructions();
+    byId('footer-address').textContent = settings.address || 'Ciudad de Panamá';
+    byId('footer-hours').textContent = settings.hours || '';
+    byId('footer-hours').hidden = !settings.hours;
+    byId('footer-payments').textContent = options.filter(([key]) => key !== 'coordinate').map(([, label]) => label).join(' · ');
     const families = [...new Set(products.map((product) => product.family).filter(Boolean))];
     families.sort(collator.compare);
     family.options.length = 1;
@@ -169,6 +305,7 @@ async function loadCatalog() {
     byId('family-field').hidden = !families.length;
     byId('filters').hidden = !products.length;
     render();
+    renderCart();
   } catch {
     status.textContent = 'No pudimos cargar el catálogo. Inténtalo de nuevo.';
     retry.hidden = false;
@@ -196,4 +333,6 @@ theme.addEventListener('click', () => {
   applyTheme();
 });
 applyTheme();
+byId('footer-year').textContent = new Date().getFullYear();
+renderCart();
 loadCatalog();

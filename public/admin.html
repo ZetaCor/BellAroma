@@ -23,6 +23,7 @@ textarea{min-height:80px;resize:vertical}
 .btn{padding:.6rem 1.2rem;border-radius:999px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
 .btn.main{background:var(--rose);border-color:var(--rose);color:#fff}
 .btn.del{border-color:#B3261E;color:#B3261E}
+a{color:inherit;text-decoration:none}.btn:hover{background:#f2e7f1}.btn.main:hover{background:#88304f}
 .btn:disabled{opacity:.5;cursor:wait}
 .bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem;align-items:center}
 .top{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
@@ -59,14 +60,16 @@ textarea{min-height:80px;resize:vertical}
 
     <div class="card">
       <h2>Pedidos y métodos de pago</h2>
-      <label for="wa">Número con código de país, sin + (ej. 50760000000)</label>
-      <input id="wa" inputmode="numeric">
+      <label for="wa">WhatsApp comercial para compras y consultas (con código de país)</label>
+      <input id="wa" inputmode="tel" placeholder="507…" maxlength="25">
+      <label for="store-address">Dirección de la tienda</label><input id="store-address" maxlength="160">
+      <label for="store-hours">Horario de atención</label><input id="store-hours" maxlength="120">
       <label for="yappy">Alias de Yappy Comercial</label>
       <input id="yappy" maxlength="60" aria-describedby="yappy-help">
       <p id="yappy-help">Completa el alias para ofrecer Yappy. Confirma el total y verifica el pago en Yappy Comercial.</p>
       <label class="chk"><input id="cash" type="checkbox"> Efectivo contra entrega</label>
       <label class="chk"><input id="card" type="checkbox"> Tarjeta contra entrega (POS)</label>
-      <div class="bar"><button class="btn" id="saveWa" type="button" disabled>Guardar métodos de pago</button><span id="payment-status" role="status"></span></div>
+      <div class="bar"><button class="btn" id="saveWa" type="button" disabled>Guardar configuración</button><span id="payment-status" role="status"></span></div>
     </div>
 
     <div class="card">
@@ -74,7 +77,7 @@ textarea{min-height:80px;resize:vertical}
       <p>Copia el código recibido por WhatsApp. Finaliza el pedido después de confirmar la venta y el cobro.</p>
       <form id="complete-order">
         <label for="order-code">Código del pedido</label>
-        <input id="order-code" required maxlength="500" autocomplete="off" spellcheck="false">
+        <input id="order-code" required autocomplete="off" spellcheck="false">
         <div class="bar"><button class="btn" id="complete-button" type="submit">Revisar pedido</button><span id="order-status" role="status"></span></div>
       </form>
     </div>
@@ -149,6 +152,8 @@ function load() {
   }).then(function (d) {
     data = d;
     $("wa").value = d.settings?.whatsapp || "";
+    $("store-address").value = d.settings?.address || "";
+    $("store-hours").value = d.settings?.hours || "";
     $("yappy").value = d.settings?.yappyAlias || "";
     $("cash").checked = d.settings?.cashOnDelivery === true;
     $("card").checked = d.settings?.cardOnDelivery === true;
@@ -196,13 +201,17 @@ $("saveWa").onclick = async function () {
   const status = $("payment-status");
   button.disabled = true;
   try {
+    const number = $("wa").value.replace(/[\s()+-]/g, "");
+    if (number && !/^\d{8,15}$/.test(number)) throw new Error("Revisa el número de WhatsApp e incluye el código de país.");
     await persist({ ...data, settings: {
-      whatsapp: $("wa").value,
+      whatsapp: number,
+      address: $("store-address").value,
+      hours: $("store-hours").value,
       yappyAlias: $("yappy").value,
       cashOnDelivery: $("cash").checked,
       cardOnDelivery: $("card").checked,
     } });
-    status.textContent = "Métodos de pago guardados.";
+    status.textContent = "Configuración guardada.";
   } catch (error) {
     status.textContent = error.message;
   } finally {
@@ -225,13 +234,14 @@ $("complete-order").onsubmit = async function (event) {
       status.textContent = "Este pedido ya se finalizó.";
       return;
     }
-    if (!confirm(`¿Finalizar el pedido de ${review.quantity} × ${review.name} y descontar las unidades?`)) return;
+    const details = review.items.map((item) => item.quantity + " × " + item.name).join("\n");
+    if (!confirm("¿Finalizar la compra y descontar estas unidades?\n\n" + details)) return;
     const result = await api("POST", "/api/orders/complete", { code, confirm: true });
     data = result;
     render();
     $("order-code").value = "";
     status.textContent = result.alreadyCompleted ? "Este pedido ya se finalizó." :
-      `Pedido finalizado. Quedan ${result.stock} unidades de ${result.name}.`;
+      "Compra finalizada. Inventario actualizado.";
   } catch (error) {
     status.textContent = error.message;
   } finally {
