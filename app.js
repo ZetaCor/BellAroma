@@ -4,6 +4,7 @@ const { pipeline } = require('node:stream/promises');
 const express = require('express');
 const store = require('./lib/store');
 const prices = require('./public/cart-prices');
+const delivery = require('./public/delivery');
 
 const app = express();
 app.use(express.json({ limit: '6mb' }));
@@ -35,11 +36,10 @@ const cleanSettings = (settings) => ({
   cardOnDelivery: settings?.cardOnDelivery === true,
   address: txt(settings?.address, 160),
   hours: txt(settings?.hours, 120),
+  mapPin: delivery.mapPin(txt(settings?.mapPin, 2048)),
 });
-const cleanStore = (b) => ({
-  settings: cleanSettings(b?.settings),
-  products: (Array.isArray(b && b.products) ? b.products : []).slice(0, 500).map((p) => ({
-    id: txt(p.id, 40) || 'p' + Date.now().toString(36),
+const cleanProduct = (p) => ({
+    id: txt(p.id, 40) || crypto.randomUUID(),
     name: txt(p.name, 120),
     brand: txt(p.brand, 80),
     family: txt(p.family, 40),
@@ -50,7 +50,10 @@ const cleanStore = (b) => ({
     available: p.available !== false,
     stock: count(p.stock) ? p.stock : null,
     cutout: p.cutout === true,
-  })).filter((p) => p.name),
+});
+const cleanStore = (b) => ({
+  settings: cleanSettings(b?.settings),
+  products: (Array.isArray(b?.products) ? b.products : []).slice(0, 500).map(cleanProduct).filter((p) => p.name),
 });
 
 const publicStore = ({ data, version }) => ({ settings: data.settings, products: data.products, version });
@@ -99,12 +102,51 @@ app.put('/api/store/settings', auth, async (req, res) => {
   try {
     const { settings, version } = req.body || {};
     if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw reject('Revisa la configuración.');
+    if (settings.mapPin && (settings.mapPin.length > 2048 || !delivery.mapPin(settings.mapPin))) throw reject('Revisa el enlace de Google Maps de la tienda.');
     const current = await store.read();
     if (version !== current.version) throw store.conflict();
-    const data = { ...current.data, settings: cleanSettings(settings) };
+    const data = { ...current.data, settings: cleanSettings({ ...current.data.settings, ...settings }) };
     const savedVersion = await store.save(data, current.version);
     res.json(publicStore({ data, version: savedVersion }));
   } catch (error) { fail(res, error, 'No se pudo guardar la configuración'); }
+});
+
+app.put('/api/products/:id', auth, async (req, res) => {
+  try {
+    const { original, product } = req.body || {};
+    const id = req.params.id;
+    if (!product || product.id !== id || id.length > 40 || (original !== null && original?.id !== id)) {
+      throw reject('Revisa el producto que quieres guardar.');
+    }
+    const draft = cleanProduct(product);
+    if (!draft.name || (product.stock != null && !count(product.stock))) throw reject('Revisa el nombre y el inventario.');
+    const base = original && cleanProduct(original);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const current = await store.read();
+      const list = current.data.products;
+      const index = list.findIndex((item) => item.id === id);
+      if (base && index === -1) throw reject('El producto fue eliminado. Tu edición sigue abierta.', 409);
+      if (index === -1 && list.length >= 500) throw reject('El catálogo admite hasta 500 perfumes.');
+      if (index === -1) list.unshift(draft);
+      else {
+        const latest = cleanProduct(list[index]);
+        const changes = Object.keys(draft).filter((key) => !base || draft[key] !== base[key]);
+        const pending = changes.filter((key) => draft[key] !== latest[key]);
+        if (!pending.length) return res.json(publicStore(current));
+        const conflicts = pending.filter((key) => !base || base[key] !== latest[key]);
+        if (conflicts.length) {
+          return res.status(409).json({ error: 'Otra edición modificó este perfume.', currentProduct: latest, conflicts });
+        }
+        for (const key of pending) list[index][key] = draft[key];
+      }
+      try {
+        const version = await store.save(current.data, current.version);
+        return res.json(publicStore({ data: current.data, version }));
+      } catch (error) {
+        if (error.status !== 409 || attempt === 2) throw error;
+      }
+    }
+  } catch (error) { fail(res, error, 'No se pudo guardar el producto'); }
 });
 
 const paymentOptions = (settings) => ({
@@ -152,15 +194,17 @@ app.post('/api/orders/request', async (req, res) => {
     if (!Object.values(options).some(Boolean)) options.coordinate = 'A coordinar por WhatsApp';
     const payment = options[txt(body.payment, 10)];
     const name = txt(body.name, 100);
-    const phone = txt(body.phone, 30);
+    const province = txt(body.province, 40);
     const area = txt(body.area, 100);
     const address = txt(body.address, 240);
     const reference = txt(body.reference, 160);
+    const pin = String(body.mapPin || '').trim();
+    if (pin && (pin.length > 2048 || !delivery.mapPin(pin))) throw reject('Revisa el enlace compartido de Google Maps.');
     if (!/^\d{8,20}$/.test(settings.whatsapp || '') || typeof payment !== 'string' || !payment) {
       throw reject('Este método de pedido no está disponible.');
     }
-    if (!name || !/^[+\d ()-]{8,30}$/.test(phone) || phone.replace(/\D/g, '').length < 8 || !area || !address) {
-      throw reject('Completa tu nombre, teléfono, zona y dirección de entrega.');
+    if (!name || !delivery.provinces.includes(province) || !area || !address) {
+      throw reject('Completa el nombre, la provincia, la localidad y la dirección de entrega.');
     }
     const basket = orderLines(data, body);
     const order = { id: crypto.randomUUID(), items: basket.map(({ product, quantity }) => ({ productId: product.id, quantity })) };
@@ -172,10 +216,12 @@ app.post('/api/orders/request', async (req, res) => {
       'Subtotal de productos: ' + prices.format(prices.total(basket)),
       'Envío a confirmar por la tienda.',
       `Pago: ${payment}`,
+      body.payment === 'yappy' && 'Enviaré el comprobante de Yappy en este chat después de confirmar el total.',
       `Nombre: ${name}`,
-      `Teléfono: ${phone}`,
-      `Zona: ${area}`,
+      `Provincia: ${province}`,
+      `Localidad: ${area}`,
       `Dirección: ${address}`,
+      'Google Maps: ' + (delivery.mapPin(pin) || delivery.mapSearch(address, area, province)),
       reference && `Referencia: ${reference}`,
       `Código del pedido: ${code}`,
     ];

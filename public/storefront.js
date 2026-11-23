@@ -35,6 +35,19 @@ const checkout = byId('checkout');
 const orderForm = byId('order-form');
 const payment = byId('order-payment');
 const checkoutStatus = byId('checkout-status');
+const province = byId('order-province');
+Delivery.provinces.forEach((name) => province.add(new Option(name, name)));
+function updateDeliveryMap() {
+  const { area, address, mapPin } = orderForm.elements;
+  const pin = Delivery.mapPin(mapPin.value.trim());
+  mapPin.setCustomValidity(mapPin.value.trim() && !pin ? 'Pega el enlace compartido desde Google Maps.' : '');
+  const link = byId('delivery-map');
+  link.hidden = !province.value && !pin;
+  link.href = pin || Delivery.mapSearch(address.value.trim(), area.value.trim(), province.value);
+  link.textContent = pin ? 'Ver ubicación compartida en Google Maps' : 'Buscar esta dirección en Google Maps';
+}
+orderForm.addEventListener('input', updateDeliveryMap);
+province.addEventListener('change', updateDeliveryMap);
 
 function paymentOptions() {
   const options = [
@@ -47,7 +60,7 @@ function paymentOptions() {
 
 function paymentInstructions() {
   const instructions = {
-    yappy: 'En Yappy, busca el comercio con el alias ' + settings.yappyAlias + '. Espera la confirmación del total antes de pagar.',
+    yappy: 'Cuando la tienda confirme el total, paga al alias ' + settings.yappyAlias + ' y envía el comprobante en el mismo chat de WhatsApp.',
     cash: 'Paga en efectivo al recibir el pedido.',
     card: 'Paga con tarjeta usando el POS del repartidor al recibir el pedido.',
     coordinate: 'Acuerda el método de pago con la tienda al enviar el pedido.',
@@ -161,7 +174,8 @@ byId('continue-shopping').addEventListener('click', () => {
 byId('checkout-next').addEventListener('click', () => {
   orderForm.hidden = false;
   byId('checkout-next').hidden = true;
-  payment.focus();
+  updateDeliveryMap();
+  orderForm.elements.name.focus();
 });
 
 orderForm.addEventListener('submit', async (event) => {
@@ -374,6 +388,9 @@ async function loadCatalog() {
     if (options.some(([key]) => key === previous)) payment.value = previous;
     paymentInstructions();
     byId('footer-address').textContent = settings.address || 'Ciudad de Panamá';
+    document.querySelectorAll('[data-store-map]').forEach((link) => {
+      link.href = Delivery.mapPin(settings.mapPin) || (settings.address ? Delivery.mapSearch(settings.address) : 'https://maps.app.goo.gl/NAjTqhjoNM2oH7k16');
+    });
     byId('footer-hours').textContent = settings.hours || '';
     byId('footer-hours').hidden = !settings.hours;
     byId('footer-payments').textContent = options.filter(([key]) => key !== 'coordinate').map(([, label]) => label).join(' · ');

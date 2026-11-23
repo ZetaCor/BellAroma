@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/storefront.css">
 <script src="/cart-prices.js" defer></script>
+<script src="/delivery.js" defer></script>
 <script src="/storefront.js" defer></script>
 </head>
 <body>
@@ -100,7 +101,7 @@
   <section class="shell visit" id="visitanos" aria-labelledby="visit-title">
     <div><h2 id="visit-title">Pruébalos en tienda</h2><p>Visita Bell Aroma en Ciudad de Panamá y descubre cómo evoluciona cada fragancia en tu piel.</p></div>
     <div class="actions">
-      <a class="button primary" href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Cómo llegar</a>
+      <a class="button primary" data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Cómo llegar</a>
       <a class="button secondary" data-contact target="_blank" rel="noopener" hidden>Consultar por WhatsApp</a>
     </div>
   </section>
@@ -110,7 +111,7 @@
     <div class="footer-brand"><a class="wordmark" href="#inicio">Bell Aroma</a><p>Perfumería en Ciudad de Panamá</p></div>
     <div class="footer-group"><h2>Tienda</h2><a href="#catalogo">Comprar perfumes</a><a href="#aroma">Guía de aromas</a><button id="footer-cart" type="button">Mi carrito</button></div>
     <div class="footer-group"><h2>Contacto</h2><a data-contact hidden target="_blank" rel="noopener">WhatsApp comercial</a><a href="https://www.instagram.com/bell_aroma_oficial" target="_blank" rel="noopener">Instagram</a></div>
-    <div class="footer-group"><h2>Visítanos</h2><p id="footer-address">Ciudad de Panamá</p><p id="footer-hours" hidden></p><a href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Ver ubicación</a></div>
+    <div class="footer-group"><h2>Visítanos</h2><p id="footer-address">Ciudad de Panamá</p><p id="footer-hours" hidden></p><a data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Ver ubicación</a></div>
   </div>
   <div class="shell footer-base"><small>© <span id="footer-year"></span> Bell Aroma</small><span id="footer-payments"></span></div>
 </footer>
@@ -127,17 +128,23 @@
     <button class="button secondary" id="continue-shopping" type="button">Seguir comprando</button>
     <button class="button primary" id="checkout-next" type="button" hidden>Continuar con la compra</button>
   <form id="order-form" hidden>
-    <h3>Entrega y pago</h3>
+    <fieldset class="order-group"><legend>Entrega</legend>
     <div class="checkout-fields">
-      <label class="wide">Método de pago<select id="order-payment" required></select></label>
-      <p class="muted wide" id="order-payment-help"></p>
-      <label>Nombre completo<input name="name" autocomplete="name" maxlength="100" required></label>
-      <label>Teléfono<input name="phone" type="tel" autocomplete="tel" maxlength="30" required></label>
-      <label class="wide">Provincia, distrito y corregimiento<input name="area" maxlength="100" required></label>
+      <label class="wide">Nombre de quien recibe<input name="name" autocomplete="name" maxlength="100" required></label>
+      <label>Provincia<select id="order-province" name="province" autocomplete="address-level1" required><option value="">Elige tu provincia</option></select></label>
+      <label>Distrito o corregimiento<input name="area" autocomplete="address-level2" maxlength="100" required></label>
       <label class="wide">Dirección de entrega<textarea name="address" autocomplete="street-address" maxlength="240" rows="2" required placeholder="Calle, edificio o número de casa"></textarea></label>
+      <div class="wide map-field">
+        <a class="map-link" id="delivery-map" target="_blank" rel="noopener" hidden>Buscar esta dirección en Google Maps</a>
+        <label>Enlace de Google Maps (opcional)<input name="mapPin" id="map-pin" type="url" inputmode="url" maxlength="2048" placeholder="Pega el enlace de tu ubicación"></label>
+      </div>
       <label class="wide">Punto de referencia (opcional)<input name="reference" maxlength="160"></label>
-    </div>
-    <p class="muted">Los datos de entrega se incluyen en el mensaje que envías al comercio.</p>
+    </div></fieldset>
+    <fieldset class="order-group payment-group"><legend>Pago</legend>
+      <label>Método de pago<select id="order-payment" required></select></label>
+      <p class="muted" id="order-payment-help"></p>
+    </fieldset>
+    <p class="muted">Al enviar el pedido, la tienda te contactará por ese mismo chat de WhatsApp.</p>
     <button class="button primary" id="order-submit" type="submit">Enviar compra por WhatsApp</button>
     <p id="checkout-status" role="status"></p>
   </form>

@@ -1,350 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Panel · Bell Aroma</title>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#F5F0F7;--card:#fff;--ink:#2A1840;--muted:#645478;--line:#DCCFE5;--rose:#A63C63;--serif:"Bodoni Moda",Georgia,serif;--sans:"Jost",system-ui,sans-serif}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
-.wrap{max-width:860px;margin:0 auto;padding:1.2rem}
-h1,h2{font-family:var(--serif);font-weight:500;margin:0 0 .8rem}
-h1{font-size:1.8rem}h2{font-size:1.35rem}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.3rem;margin-bottom:1.2rem}
-label{display:block;font-size:.9rem;color:var(--muted);margin:.8rem 0 .25rem}
-input,select,textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
-textarea{min-height:80px;resize:vertical}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-.chk{display:flex;align-items:center;gap:.5rem;margin-top:1rem;color:var(--ink)}
-.chk input{width:auto}
-.btn{padding:.6rem 1.2rem;border-radius:999px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
-.btn.main{background:var(--rose);border-color:var(--rose);color:#fff}
-.btn.del{border-color:#B3261E;color:#B3261E}
-a{color:inherit;text-decoration:none}.btn:hover{background:#f2e7f1}.btn.main:hover{background:#88304f}
-.btn:disabled{opacity:.5;cursor:wait}
-.bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem;align-items:center}
-.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
-.item{display:flex;gap:.9rem;align-items:center;padding:.8rem 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.thumb{width:56px;height:70px;border-radius:8px;background:#EBC9D6;object-fit:cover;flex:none}
-.grow{flex:1;min-width:0}
-.grow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grow span{color:var(--muted);font-size:.9rem}
-.acts{display:flex;gap:.4rem;flex-wrap:wrap}
-.acts .btn{padding:.35rem .8rem;font-size:.9rem}
-#msg{color:var(--muted);font-size:.95rem}
-#msg.err{color:#B3261E}
-#prev{background:#EFE6EC;max-width:140px;border-radius:10px;margin-top:.5rem;display:none}
-#login{max-width:380px;margin:12vh auto}
-[hidden]{display:none!important}
-@media(max-width:560px){.row{grid-template-columns:1fr}.item{flex-wrap:wrap}}
-</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Administración · Bell Aroma</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css"><script src="/admin.js" defer></script>
 </head>
 <body>
-<div class="wrap">
-  <div id="login" class="card" hidden>
-    <h1>Bell Aroma</h1>
-    <label for="pw">Contraseña del panel</label>
-    <input id="pw" type="password" autocomplete="current-password">
-    <div class="bar"><button class="btn main" id="go" type="button">Entrar</button><span id="lmsg" class="err"></span></div>
-  </div>
-
-  <div id="app" hidden>
-    <div class="top">
-      <h1>Panel de productos</h1>
-      <div class="acts"><a class="btn" href="/" target="_blank">Ver tienda</a><button class="btn" id="out" type="button">Salir</button></div>
-    </div>
-
-    <div class="card">
-      <h2>Pedidos y métodos de pago</h2>
-      <label for="wa">WhatsApp comercial para compras y consultas (con código de país)</label>
-      <input id="wa" inputmode="tel" placeholder="507…" maxlength="25">
-      <label for="store-address">Dirección de la tienda</label><input id="store-address" maxlength="160">
-      <label for="store-hours">Horario de atención</label><input id="store-hours" maxlength="120">
-      <label for="yappy">Alias de Yappy Comercial</label>
-      <input id="yappy" maxlength="60" aria-describedby="yappy-help">
-      <p id="yappy-help">Completa el alias para ofrecer Yappy. Confirma el total y verifica el pago en Yappy Comercial.</p>
-      <label class="chk"><input id="cash" type="checkbox"> Efectivo contra entrega</label>
-      <label class="chk"><input id="card" type="checkbox"> Tarjeta contra entrega (POS)</label>
-      <div class="bar"><button class="btn" id="saveWa" type="button" disabled>Guardar configuración</button><span id="payment-status" role="status"></span></div>
-    </div>
-
-    <div class="card">
-      <h2>Finalizar pedido</h2>
-      <p>Copia el código recibido por WhatsApp. Finaliza el pedido después de confirmar la venta y el cobro.</p>
-      <form id="complete-order">
-        <label for="order-code">Código del pedido</label>
-        <input id="order-code" required autocomplete="off" spellcheck="false">
-        <div class="bar"><button class="btn" id="complete-button" type="submit">Revisar pedido</button><span id="order-status" role="status"></span></div>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2 id="ftitle">Nuevo producto</h2>
-      <label for="name">Nombre *</label><input id="name" maxlength="120">
-      <div class="row">
-        <div><label for="brand">Marca</label><input id="brand" maxlength="80"></div>
-        <div><label for="family">Familia olfativa</label>
-          <select id="family"><option value="">Sin familia</option><option>Floral</option><option>Cítrico y fresco</option><option>Dulce</option><option>Amaderado</option><option>Ámbar y especiado</option></select></div>
-      </div>
-      <div class="row">
-        <div><label for="size">Tamaño (ej. 100 ml)</label><input id="size" maxlength="20"></div>
-        <div><label for="price">Precio (opcional, ej. $45)</label><input id="price" maxlength="20"></div>
-      </div>
-      <label for="desc">Descripción corta</label><textarea id="desc" maxlength="500"></textarea>
-      <label for="file">Foto</label><input id="file" type="file" accept="image/*">
-      <img id="prev" alt="Vista previa">
-      <label for="stock">Unidades en inventario *</label>
-      <input id="stock" type="number" min="0" max="999999" step="1" required>
-      <label class="chk"><input id="avail" type="checkbox" checked> Disponible para venta</label>
-      <div class="bar">
-        <button class="btn main" id="save" type="button">Guardar producto</button>
-        <button class="btn" id="cancel" type="button" hidden>Cancelar edición</button>
-        <span id="msg"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Productos (<span id="count">0</span>)</h2>
-      <div id="list"></div>
-      <button class="btn" id="import-catalog" type="button" disabled>Agregar perfumes de las fotos incluidas</button>
-      <p id="import-status" role="status"></p>
+<header class="mast"><div class="mast-inner"><a class="brand" href="/">Bell Aroma</a><span>Administración</span></div></header>
+<main>
+  <section id="login" class="card login" hidden>
+    <h1>Acceso al panel</h1>
+    <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password">
+    <div class="bar"><button class="btn main" id="go" type="button">Entrar</button><span id="lmsg" class="err" role="status"></span></div>
+  </section>
+  <div id="app" class="workspace" hidden>
+    <nav aria-label="Administración">
+      <button type="button" data-view="catalog" aria-pressed="true" aria-controls="catalog">Catálogo</button>
+      <button type="button" data-view="orders" aria-pressed="false" aria-controls="orders">Pedidos</button>
+      <button type="button" data-view="settings" aria-pressed="false" aria-controls="settings">Tienda y pagos</button>
+      <div class="nav-actions"><a href="/" target="_blank" rel="noopener">Ver tienda</a><button id="out" type="button">Salir</button></div>
+    </nav>
+    <div class="content">
+      <section id="catalog">
+        <div class="section-head"><h1>Catálogo</h1><button class="btn main" id="new-product" type="button">Nuevo perfume</button></div>
+        <form id="product-form" class="card" hidden>
+          <h2 id="ftitle">Nuevo perfume</h2>
+          <div class="editor-grid">
+            <div class="photo-field"><label for="file">Foto del perfume</label><div class="photo"><span>Sin foto</span><img id="prev" alt="Vista previa" hidden></div>
+              <input id="file" type="file" accept="image/*" class="file-input"><label for="file" class="btn upload">Elegir imagen</label></div>
+            <div class="fields">
+              <label class="wide">Nombre del perfume<input id="name" required maxlength="120"></label>
+              <label>Marca<input id="brand" maxlength="80"></label>
+              <label>Familia olfativa<select id="family"><option value="">Sin familia</option><option>Floral</option><option>Cítrico y fresco</option><option>Dulce</option><option>Amaderado</option><option>Ámbar y especiado</option></select></label>
+              <label class="wide">Descripción<textarea id="desc" maxlength="500" rows="2"></textarea></label>
+              <div class="stock-fields wide">
+                <label>Tamaño<input id="size" maxlength="20" placeholder="100 ml"></label>
+                <label>Precio<input id="price" maxlength="20" placeholder="$45"></label>
+                <label>Unidades<input id="stock" type="number" min="0" max="999999" step="1" required></label>
+              </div>
+              <label class="chk wide"><input id="avail" type="checkbox" checked> Disponible para venta</label>
+            </div>
+          </div>
+          <div class="bar"><button class="btn main" id="save" type="submit">Guardar perfume</button><button class="btn" id="cancel" type="button">Cancelar</button></div>
+        </form>
+        <p id="msg" role="status"></p>
+        <div class="card"><h2>Perfumes <span id="count" class="count">0</span></h2><div id="list"></div>
+          <div class="bar"><button class="btn" id="import-catalog" type="button" disabled>Agregar perfumes de las fotos incluidas</button></div><p id="import-status" role="status"></p>
+        </div>
+      </section>
+      <section id="orders" hidden><h1>Pedidos</h1><form class="card" id="complete-order"><h2>Finalizar una venta</h2>
+        <p>Pega el código recibido por WhatsApp después de verificar el cobro.</p>
+        <label for="order-code">Código del pedido</label><input id="order-code" required autocomplete="off" spellcheck="false">
+        <div class="bar"><button class="btn main" id="complete-button" type="submit">Revisar pedido</button><span id="order-status" role="status"></span></div>
+      </form></section>
+      <section id="settings" hidden><h1>Tienda y pagos</h1><form class="card" id="settings-form"><h2>Datos de la tienda</h2>
+        <div class="fields"><label>WhatsApp comercial<input id="wa" inputmode="tel" placeholder="507…" maxlength="25"></label>
+          <label>Horario de atención<input id="store-hours" maxlength="120"></label>
+          <label>Dirección de la tienda<input id="store-address" maxlength="160"></label>
+          <label>Enlace de Google Maps (opcional)<input id="store-map" type="url" maxlength="2048" placeholder="Ubicación del local"></label></div>
+        <fieldset><legend>Métodos de pago</legend><label class="alias">Alias de Yappy Comercial<input id="yappy" maxlength="60"></label>
+          <div class="choices"><label class="chk"><input id="cash" type="checkbox"> Efectivo contra entrega</label><label class="chk"><input id="card" type="checkbox"> Tarjeta contra entrega (POS)</label></div>
+        </fieldset>
+        <div class="bar"><button class="btn main" id="saveWa" type="submit" disabled>Guardar configuración</button><span id="payment-status" role="status"></span></div>
+      </form></section>
     </div>
   </div>
-</div>
-
-<script>
-var $ = function (id) { return document.getElementById(id); };
-var token = localStorage.getItem("ba-token") || "";
-var data = { settings: { whatsapp: "" }, products: [] };
-var editing = null, editingVersion, newImage = null, newCut = false;
-
-function say(t, err) { $("msg").textContent = t || ""; $("msg").className = err ? "err" : ""; }
-function api(method, url, body) {
-  return fetch(url, {
-    method: method,
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    body: body ? JSON.stringify(body) : undefined
-  }).then(function (r) {
-    if (r.status === 401 && token) { logout(); throw new Error("Sesión vencida"); }
-    return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "Error"); return j; });
-  });
-}
-function logout() { token = ""; localStorage.removeItem("ba-token"); show(); }
-function show() { $("login").hidden = !!token; $("app").hidden = !token; if (token) load(); }
-
-$("go").onclick = function () {
-  api("POST", "/api/login", { password: $("pw").value }).then(function (r) {
-    token = r.token; localStorage.setItem("ba-token", token); $("pw").value = ""; $("lmsg").textContent = ""; show();
-  }).catch(function (e) { $("lmsg").textContent = e.message; });
-};
-$("pw").onkeydown = function (e) { if (e.key === "Enter") $("go").click(); };
-$("out").onclick = logout;
-
-function load() {
-  $("import-catalog").disabled = true;
-  $("saveWa").disabled = true;
-  api("GET", "/api/store").then(function (d) {
-    data = d;
-    $("wa").value = d.settings?.whatsapp || "";
-    $("store-address").value = d.settings?.address || "";
-    $("store-hours").value = d.settings?.hours || "";
-    $("yappy").value = d.settings?.yappyAlias || "";
-    $("cash").checked = d.settings?.cashOnDelivery === true;
-    $("card").checked = d.settings?.cardOnDelivery === true;
-    $("saveWa").disabled = false;
-    render();
-    $("import-catalog").disabled = false;
-  }).catch(function (e) { $("payment-status").textContent = e.message; say(e.message, true); });
-}
-$("import-catalog").onclick = async function () {
-  const button = $("import-catalog");
-  const status = $("import-status");
-  button.disabled = true;
-  status.textContent = "Agregando perfumes…";
-  try {
-    const response = await fetch("/products/catalog.json");
-    if (!response.ok) throw new Error("No se pudieron cargar los perfumes incluidos.");
-    const included = await response.json();
-    const nameKey = (name) => name.trim().toLocaleLowerCase("es");
-    const existingIds = new Set(data.products.map((product) => product.id));
-    const existingNames = new Set(data.products.map((product) => nameKey(product.name)));
-    const additions = included.filter((product) =>
-      !existingIds.has(product.id) && !existingNames.has(nameKey(product.name))
-    );
-    if (!additions.length) {
-      status.textContent = "Los perfumes incluidos ya están en el catálogo.";
-      return;
-    }
-    if (data.products.length + additions.length > 500) {
-      throw new Error("El catálogo admite hasta 500 productos.");
-    }
-    await persist({ ...data, products: data.products.concat(additions) });
-    status.textContent = "Perfumes agregados. Completa sus datos desde el panel.";
-  } catch (error) {
-    status.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-};
-async function persist(next) {
-  data = await api("PUT", "/api/store", next);
-  render();
-}
-$("saveWa").onclick = async function () {
-  const button = $("saveWa");
-  const status = $("payment-status");
-  button.disabled = true;
-  try {
-    const number = $("wa").value.replace(/[\s()+-]/g, "");
-    if (number && !/^\d{8,15}$/.test(number)) throw new Error("Revisa el número de WhatsApp e incluye el código de país.");
-    data = await api("PUT", "/api/store/settings", { version: data.version, settings: {
-      whatsapp: number,
-      address: $("store-address").value,
-      hours: $("store-hours").value,
-      yappyAlias: $("yappy").value,
-      cashOnDelivery: $("cash").checked,
-      cardOnDelivery: $("card").checked,
-    } });
-    render();
-    status.textContent = "Configuración guardada.";
-  } catch (error) {
-    status.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-};
-
-$("complete-order").onsubmit = async function (event) {
-  event.preventDefault();
-  const button = $("complete-button");
-  const status = $("order-status");
-  const code = $("order-code").value.trim();
-  button.disabled = true;
-  status.textContent = "";
-  try {
-    const review = await api("POST", "/api/orders/complete", { code });
-    if (review.alreadyCompleted) {
-      data = review;
-      render();
-      status.textContent = "Este pedido ya se finalizó.";
-      return;
-    }
-    const details = review.items.map((item) => item.quantity + " × " + item.name).join("\n");
-    if (!confirm("¿Finalizar la compra y descontar estas unidades?\n\n" + details)) return;
-    const result = await api("POST", "/api/orders/complete", { code, confirm: true });
-    data = result;
-    render();
-    $("order-code").value = "";
-    status.textContent = result.alreadyCompleted ? "Este pedido ya se finalizó." :
-      "Compra finalizada. Inventario actualizado.";
-  } catch (error) {
-    status.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-};
-
-function resize(file) {
-  return new Promise(function (ok, no) {
-    var img = new Image();
-    img.onload = function () {
-      var s = Math.min(1, 1000 / Math.max(img.width, img.height));
-      var c = document.createElement("canvas");
-      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
-      var ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(img.src);
-      var cut = false;
-      try { cut = ctx.getImageData(0, 0, 1, 1).data[3] < 250 && ctx.getImageData(c.width - 1, c.height - 1, 1, 1).data[3] < 250; } catch (e) {}
-      ok({ data: cut ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.85), cut: cut });
-    };
-    img.onerror = function () { no(new Error("No se pudo leer la imagen")); };
-    img.src = URL.createObjectURL(file);
-  });
-}
-$("file").onchange = function () {
-  var f = $("file").files[0]; if (!f) return;
-  resize(f).then(function (r) { newImage = r.data; newCut = r.cut; $("prev").src = r.data; $("prev").style.display = "block"; }).catch(function (e) { say(e.message, true); });
-};
-
-function clearForm() {
-  editing = null; newImage = null; newCut = false;
-  ["name", "brand", "size", "price", "desc", "file", "stock"].forEach(function (k) { $(k).value = ""; });
-  $("family").value = ""; $("avail").checked = true; $("prev").style.display = "none";
-  $("ftitle").textContent = "Nuevo producto"; $("cancel").hidden = true;
-}
-$("cancel").onclick = function () { clearForm(); say(""); };
-
-$("save").onclick = function () {
-  var name = $("name").value.trim();
-  if (!name) { say("Escribe el nombre del producto.", true); return; }
-  if (!$("stock").reportValidity()) return;
-  if (editing && editingVersion !== data.version) {
-    say("El catálogo cambió. Abre el producto de nuevo para editar sus existencias.", true);
-    return;
-  }
-  const snapshot = data;
-  const stock = $("stock").valueAsNumber;
-  $("save").disabled = true; say("Guardando…");
-  var old = editing ? data.products.find(function (p) { return p.id === editing; }) : null;
-  var step = newImage ? api("POST", "/api/upload", { image: newImage }).then(function (r) { return r.url; }) : Promise.resolve(old ? old.image : "");
-  step.then(function (img) {
-    var p = {
-      id: old ? old.id : crypto.randomUUID(), name: name, brand: $("brand").value, family: $("family").value,
-      size: $("size").value, price: $("price").value, description: $("desc").value, image: img, available: $("avail").checked, stock, cutout: newImage ? newCut : !!(old && old.cutout)
-    };
-    const products = old ? snapshot.products.map((item) => item.id === p.id ? p : item) : [p, ...snapshot.products];
-    return persist({ ...snapshot, products });
-  }).then(function () { clearForm(); say("Producto guardado."); }).catch(function (e) { say(e.message, true); }).then(function () { $("save").disabled = false; });
-};
-
-function edit(p) {
-  editing = p.id; editingVersion = data.version; newImage = null;
-  $("name").value = p.name; $("brand").value = p.brand; $("family").value = p.family; $("size").value = p.size;
-  $("price").value = p.price; $("desc").value = p.description; $("avail").checked = p.available;
-  $("stock").value = p.stock ?? "";
-  if (p.image) { $("prev").src = p.image; $("prev").style.display = "block"; } else $("prev").style.display = "none";
-  $("ftitle").textContent = "Editar producto"; $("cancel").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function btn(label, cls, fn) { var b = document.createElement("button"); b.type = "button"; b.className = "btn " + cls; b.textContent = label; b.onclick = fn; return b; }
-
-function render() {
-  $("count").textContent = data.products.length;
-  var l = $("list"); l.textContent = "";
-  if (!data.products.length) { l.textContent = "Aún no hay productos. Agrega el primero arriba."; return; }
-  data.products.forEach(function (p) {
-    var row = document.createElement("div"); row.className = "item";
-    var im = document.createElement("img"); im.className = "thumb"; im.alt = ""; if (p.image) im.src = p.image;
-    var g = document.createElement("div"); g.className = "grow";
-    var b = document.createElement("b"); b.textContent = p.name;
-    var s = document.createElement("span");
-    const stock = p.stock == null ? "Inventario pendiente" : `${p.stock} en inventario`;
-    s.textContent = [p.brand, p.size, p.price, stock, (!p.available || p.stock === 0) ? "Agotado" : ""].filter(Boolean).join(" · ");
-    g.appendChild(b); g.appendChild(s);
-    var a = document.createElement("div"); a.className = "acts";
-    a.appendChild(btn(p.available ? "Marcar agotado" : "Marcar disponible", "", async function () {
-      try {
-        await persist({ ...data, products: data.products.map((item) =>
-          item.id === p.id ? { ...item, available: !item.available } : item
-        ) });
-        say("Disponibilidad actualizada.");
-      } catch (error) { say(error.message, true); }
-    }));
-    a.appendChild(btn("Editar", "", function () { edit(p); }));
-    a.appendChild(btn("Eliminar", "del", async function () {
-      if (!confirm("¿Eliminar “" + p.name + "”?")) return;
-      try {
-        await persist({ ...data, products: data.products.filter((item) => item.id !== p.id) });
-        say("Producto eliminado.");
-      } catch (error) { say(error.message, true); }
-    }));
-    row.appendChild(im); row.appendChild(g); row.appendChild(a); l.appendChild(row);
-  });
-}
-show();
-</script>
-</body>
-</html>
+</main></body></html>
