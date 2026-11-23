@@ -87,7 +87,12 @@ textarea{min-height:80px;resize:vertical}
       </div>
     </div>
 
-    <div class="card"><h2>Productos (<span id="count">0</span>)</h2><div id="list"></div></div>
+    <div class="card">
+      <h2>Productos (<span id="count">0</span>)</h2>
+      <div id="list"></div>
+      <button class="btn" id="import-catalog" type="button" disabled>Agregar perfumes de las fotos incluidas</button>
+      <p id="import-status" role="status"></p>
+    </div>
   </div>
 </div>
 
@@ -120,10 +125,49 @@ $("pw").onkeydown = function (e) { if (e.key === "Enter") $("go").click(); };
 $("out").onclick = logout;
 
 function load() {
-  fetch("/api/store").then(function (r) { return r.json(); }).then(function (d) {
+  $("import-catalog").disabled = true;
+  fetch("/api/store").then(function (r) {
+    if (!r.ok) throw new Error("No se pudo cargar el catálogo.");
+    return r.json();
+  }).then(function (d) {
     data = d; $("wa").value = (d.settings && d.settings.whatsapp) || ""; render();
-  });
+    $("import-catalog").disabled = false;
+  }).catch(function (e) { say(e.message, true); });
 }
+$("import-catalog").onclick = async function () {
+  const button = $("import-catalog");
+  const status = $("import-status");
+  button.disabled = true;
+  status.textContent = "Agregando perfumes…";
+  try {
+    const response = await fetch("/products/catalog.json");
+    if (!response.ok) throw new Error("No se pudieron cargar los perfumes incluidos.");
+    const included = await response.json();
+    const nameKey = (name) => name.trim().toLocaleLowerCase("es");
+    const existingIds = new Set(data.products.map((product) => product.id));
+    const existingNames = new Set(data.products.map((product) => nameKey(product.name)));
+    const additions = included.filter((product) =>
+      !existingIds.has(product.id) && !existingNames.has(nameKey(product.name))
+    );
+    if (!additions.length) {
+      status.textContent = "Los perfumes incluidos ya están en el catálogo.";
+      return;
+    }
+    if (data.products.length + additions.length > 500) {
+      throw new Error("El catálogo admite hasta 500 productos.");
+    }
+    data = await api("PUT", "/api/store", {
+      settings: data.settings,
+      products: data.products.concat(additions)
+    });
+    render();
+    status.textContent = "Perfumes agregados. Completa sus datos desde el panel.";
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 function persist(msg) {
   return api("PUT", "/api/store", data).then(function (d) { data = d; render(); say(msg); }).catch(function (e) { say(e.message, true); });
 }

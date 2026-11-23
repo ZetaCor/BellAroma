@@ -1,0 +1,8 @@
+[
+  {"id":"ba-vanille-caviar","name":"Vanille Caviar","brand":"BDK Parfums","image":"/products/bdk-parfums.png"},
+  {"id":"ba-nava-sol","name":"Nava Sol","brand":"Rayhaan","image":"/products/nava-sol.png"},
+  {"id":"ba-rock-street","name":"Rock Street","image":"/products/rock-street.png"},
+  {"id":"ba-sunset-hour","name":"Sunset Hour","brand":"Goldfield & Banks","image":"/products/sunset-hour.jpg"},
+  {"id":"ba-valero","name":"Valero","brand":"Parfums de Marly","image":"/products/valero.png"},
+  {"id":"ba-village","name":"Village of New York","image":"/products/village-of-new-york.png"}
+]
