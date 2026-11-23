@@ -8,9 +8,9 @@ Tienda: http://localhost:3000 · Panel: http://localhost:3000/admin
 
 ## GitHub + Vercel
 1. Sube el proyecto a GitHub e impórtalo en Vercel.
-2. En Vercel: Storage → Create → Blob, y conéctalo al proyecto (crea `BLOB_READ_WRITE_TOKEN`).
+2. En Vercel, conecta el almacén Blob al proyecto y habilita **Production**. Bell Aroma utiliza un almacén privado con `BLOB_ACCESS=private` y la conexión OIDC de Vercel con `BLOB_STORE_ID`. Las fotos se sirven mediante la tienda. También se admite un almacén público con `BLOB_ACCESS=public` y conexiones mediante `BLOB_READ_WRITE_TOKEN`.
 3. En Settings → Environment Variables agrega `ADMIN_PASSWORD` y `SESSION_SECRET`.
-4. Redeploy. Entra a `/admin`, pon el WhatsApp de la tienda y carga los productos.
+4. Vuelve a desplegar Production para aplicar la conexión. Entra a `/admin`, guarda el WhatsApp y recarga la página para verificarlo. Si falta la conexión, la tienda puede mostrar los perfumes iniciales y el panel indicará que hace falta almacenamiento para guardar.
 
 ## Inventario y pedidos
 

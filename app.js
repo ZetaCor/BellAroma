@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const { Readable } = require('node:stream');
+const { pipeline } = require('node:stream/promises');
 const express = require('express');
 const store = require('./lib/store');
 const prices = require('./public/cart-prices');
@@ -26,15 +28,16 @@ const auth = (req, res, next) =>
 
 const txt = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 const count = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 999999;
+const cleanSettings = (settings) => ({
+  whatsapp: txt(settings?.whatsapp, 20).replace(/\D/g, ''),
+  yappyAlias: txt(settings?.yappyAlias, 60),
+  cashOnDelivery: settings?.cashOnDelivery === true,
+  cardOnDelivery: settings?.cardOnDelivery === true,
+  address: txt(settings?.address, 160),
+  hours: txt(settings?.hours, 120),
+});
 const cleanStore = (b) => ({
-  settings: {
-    whatsapp: txt(b?.settings?.whatsapp, 20).replace(/\D/g, ''),
-    yappyAlias: txt(b?.settings?.yappyAlias, 60),
-    cashOnDelivery: b?.settings?.cashOnDelivery === true,
-    cardOnDelivery: b?.settings?.cardOnDelivery === true,
-    address: txt(b?.settings?.address, 160),
-    hours: txt(b?.settings?.hours, 120),
-  },
+  settings: cleanSettings(b?.settings),
   products: (Array.isArray(b && b.products) ? b.products : []).slice(0, 500).map((p) => ({
     id: txt(p.id, 40) || 'p' + Date.now().toString(36),
     name: txt(p.name, 120),
@@ -51,12 +54,28 @@ const cleanStore = (b) => ({
 });
 
 const publicStore = ({ data, version }) => ({ settings: data.settings, products: data.products, version });
-const fail = (res, error, fallback) => res.status(error.status || 500).json({ error: error.status ? error.message : fallback });
+function fail(res, error, fallback) {
+  if (error.status) return res.status(error.status).json({ error: error.message });
+  // Keep credentials, request bodies and customer details out of diagnostic logs.
+  console.error(fallback, error.constructor.name, error.code || '');
+  const { BlobAccessError, BlobStoreNotFoundError, BlobStoreSuspendedError, BlobError } = require('@vercel/blob');
+  let message = fallback;
+  if (error instanceof BlobAccessError || error instanceof BlobStoreNotFoundError) {
+    message = 'Vercel Blob denegó el acceso al almacén. Revisa la conexión del proyecto y su entorno de despliegue.';
+  } else if (error instanceof BlobStoreSuspendedError) {
+    message = 'El almacén de Vercel Blob está suspendido. Revisa su estado en Vercel.';
+  } else if (error instanceof BlobError) {
+    message = 'Vercel Blob no pudo completar la operación. Revisa la conexión, los permisos y el estado del almacén.';
+  } else if (['EROFS', 'EACCES', 'EPERM', 'ENOSPC'].includes(error.code)) {
+    message = 'El servidor no pudo escribir los datos. Revisa los permisos y el espacio disponible del almacenamiento.';
+  }
+  return res.status(message === fallback ? 500 : 503).json({ error: message });
+}
 const reject = (message, status = 400) => Object.assign(new Error(message), { status });
 
 app.get('/api/store', async (req, res) => {
   try { res.set('Cache-Control', 'no-store'); res.json(publicStore(await store.read())); }
-  catch (e) { res.status(500).json({ error: 'No se pudo leer la tienda' }); }
+  catch (e) { fail(res, e, 'No se pudo leer la tienda'); }
 });
 
 app.post('/api/login', (req, res) => {
@@ -74,6 +93,18 @@ app.put('/api/store', auth, async (req, res) => {
     const version = await store.save(data, current.version);
     res.json(publicStore({ data, version }));
   } catch (error) { fail(res, error, 'No se pudo guardar'); }
+});
+
+app.put('/api/store/settings', auth, async (req, res) => {
+  try {
+    const { settings, version } = req.body || {};
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw reject('Revisa la configuración.');
+    const current = await store.read();
+    if (version !== current.version) throw store.conflict();
+    const data = { ...current.data, settings: cleanSettings(settings) };
+    const savedVersion = await store.save(data, current.version);
+    res.json(publicStore({ data, version: savedVersion }));
+  } catch (error) { fail(res, error, 'No se pudo guardar la configuración'); }
 });
 
 const paymentOptions = (settings) => ({
@@ -177,7 +208,18 @@ app.post('/api/orders/complete', auth, async (req, res) => {
 
 app.post('/api/upload', auth, async (req, res) => {
   try { res.json({ url: await store.saveImage(req.body && req.body.image) }); }
-  catch (e) { res.status(400).json({ error: e.message }); }
+  catch (e) { fail(res, e, 'No se pudo guardar la imagen'); }
+});
+
+app.get('/api/product-images/:name', async (req, res) => {
+  try {
+    const image = await store.readProductImage(req.params.name);
+    if (!image) return res.sendStatus(404);
+    res.type(image.blob.contentType).set('Cache-Control', 'public, max-age=31536000, immutable');
+    await pipeline(Readable.fromWeb(image.stream), res);
+  } catch (error) {
+    if (!res.headersSent && !res.destroyed) fail(res, error, 'No se pudo cargar la imagen');
+  }
 });
 
 module.exports = app;
