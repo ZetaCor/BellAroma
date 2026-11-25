@@ -1,4 +1,4 @@
-﻿const byId = (id) => document.getElementById(id);
+const byId = (id) => document.getElementById(id);
 const search = byId('search');
 const brand = byId('brand');
 const family = byId('family');
@@ -38,6 +38,10 @@ const checkoutStatus = byId('checkout-status');
 const checkoutDelivery = setupCheckoutDelivery(orderForm);
 let mapsBrowserKey = '';
 
+// --- Yappy state ---
+let yappyProofFile = null;
+let yappyProofDataUrl = null;
+
 function paymentOptions() {
   const options = [
     settings.yappyAlias && ['yappy', 'Yappy'],
@@ -47,14 +51,120 @@ function paymentOptions() {
   return options.length ? options : [['coordinate', 'A coordinar por WhatsApp']];
 }
 
+function buildYappySection() {
+  const section = element('div', 'yappy-section');
+
+  // QR display
+  const qrWrap = element('div', 'yappy-qr-wrap');
+  if (settings.yappyQrImage) {
+    const img = document.createElement('img');
+    img.src = settings.yappyQrImage;
+    img.className = 'yappy-qr-img';
+    img.alt = 'Código QR de Yappy para ' + settings.yappyAlias;
+    qrWrap.append(img);
+  } else {
+    const ph = element('div', 'yappy-qr-placeholder');
+    ph.innerHTML = '<span style="font-size:1.8rem">📱</span><span style="margin-top:.4rem">QR de Yappy</span>';
+    qrWrap.append(ph);
+  }
+  if (settings.yappyAlias) {
+    const badge = element('div', 'yappy-alias-badge');
+    badge.innerHTML = '🟢 ' + settings.yappyAlias;
+    qrWrap.append(badge);
+  }
+  section.append(qrWrap);
+
+  // Instructions
+  const instr = element('p', 'yappy-instructions');
+  instr.textContent = settings.yappyAlias
+    ? 'Realiza el pago vía Yappy al alias ' + settings.yappyAlias + '. Luego adjunta el comprobante (captura o número de referencia) antes de enviar tu pedido por WhatsApp.'
+    : 'Realiza el pago vía Yappy y adjunta el comprobante antes de enviar tu pedido.';
+  section.append(instr);
+
+  // Reference number input
+  const refLabel = element('label', 'yappy-reference-label');
+  refLabel.htmlFor = 'yappy-reference';
+  refLabel.textContent = 'Número de referencia (opcional)';
+  const refRow = element('div', 'yappy-reference-row');
+  const refInput = document.createElement('input');
+  refInput.type = 'text';
+  refInput.id = 'yappy-reference';
+  refInput.placeholder = 'Ej: 123456789';
+  refInput.maxLength = 60;
+  refRow.append(refInput);
+
+  // Image upload
+  const uploadInput = document.createElement('input');
+  uploadInput.type = 'file';
+  uploadInput.accept = 'image/*';
+  uploadInput.style.display = 'none';
+  uploadInput.id = 'yappy-upload-input';
+  const uploadBtn = element('label', 'yappy-upload-btn');
+  uploadBtn.htmlFor = 'yappy-upload-input';
+  uploadBtn.innerHTML = '<span>📎</span> Subir captura';
+  uploadInput.addEventListener('change', () => {
+    const file = uploadInput.files[0];
+    if (!file) return;
+    yappyProofFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      yappyProofDataUrl = e.target.result;
+      renderYappyPreview(previewRow, file);
+    };
+    reader.readAsDataURL(file);
+  });
+  refRow.append(uploadInput, uploadBtn);
+  refLabel.append(refRow);
+
+  const previewRow = element('div', 'yappy-preview-row');
+  section.append(refLabel, previewRow);
+  return section;
+}
+
+function renderYappyPreview(previewRow, file) {
+  previewRow.replaceChildren();
+  if (!file) return;
+  if (yappyProofDataUrl) {
+    const thumb = document.createElement('img');
+    thumb.src = yappyProofDataUrl;
+    thumb.className = 'yappy-preview-thumb';
+    thumb.alt = 'Vista previa comprobante';
+    previewRow.append(thumb);
+  }
+  const name = element('span', 'yappy-preview-name', file.name);
+  const removeBtn = element('button', 'yappy-remove-img', '× Quitar');
+  removeBtn.type = 'button';
+  removeBtn.addEventListener('click', () => {
+    yappyProofFile = null;
+    yappyProofDataUrl = null;
+    previewRow.replaceChildren();
+    byId('yappy-upload-input') && (byId('yappy-upload-input').value = '');
+  });
+  previewRow.append(name, removeBtn);
+}
+
+function yappyReferenceValue() {
+  return byId('yappy-reference')?.value.trim() || '';
+}
+
 function paymentInstructions() {
+  const payEl = byId('order-payment-help');
+  const yappyWrap = byId('yappy-section-wrap');
+  const isYappy = payment.value === 'yappy';
+
   const instructions = {
-    yappy: 'Cuando la tienda confirme el total, paga al alias ' + settings.yappyAlias + ' y envía el comprobante en el mismo chat de WhatsApp.',
     cash: 'Paga en efectivo al recibir el pedido.',
     card: 'Paga con tarjeta usando el POS del repartidor al recibir el pedido.',
     coordinate: 'Acuerda el método de pago con la tienda al enviar el pedido.',
   };
-  byId('order-payment-help').textContent = instructions[payment.value] || '';
+  payEl.textContent = isYappy ? '' : (instructions[payment.value] || '');
+
+  if (yappyWrap) {
+    yappyWrap.hidden = !isYappy;
+    if (isYappy && !yappyWrap.children.length) {
+      yappyWrap.append(buildYappySection());
+    }
+  }
 }
 
 function cartProduct(id) {
@@ -72,7 +182,7 @@ function notifyCart(message) {
   byId('cart-notice').hidden = false;
   byId('notice-text').textContent = message;
   clearTimeout(noticeTimeout);
-  noticeTimeout = setTimeout(() => { byId('cart-notice').hidden = true; }, 4000);
+  noticeTimeout = setTimeout(() => { byId('cart-notice').hidden = true; }, 4200);
 }
 
 function addToCart(product) {
@@ -181,8 +291,10 @@ function orderBody() {
   return JSON.stringify({
     ...Object.fromEntries(new FormData(orderForm)), ...checkoutDelivery.addressData(),
     items: cart, payment: payment.value,
+    yappyReference: yappyReferenceValue(),
   });
 }
+
 orderForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!whatsapp || !checkoutDelivery.validateAddress()) return;
@@ -207,14 +319,31 @@ orderForm.addEventListener('submit', async (event) => {
       }
       lastRequest = { body, url: result.url };
     }
-    checkoutStatus.textContent = 'Envía el mensaje en WhatsApp para que la tienda reciba tu solicitud.';
-    location.assign(lastRequest.url);
+
+    // Build the final WhatsApp URL, potentially with Yappy proof info appended
+    let url = lastRequest.url;
+    const ref = yappyReferenceValue();
+    if (payment.value === 'yappy' && ref) {
+      // Append reference to message text
+      const decoded = new URL(url);
+      const text = (decoded.searchParams.get('text') || '') + '\n\n📋 Referencia Yappy: ' + ref;
+      decoded.searchParams.set('text', text);
+      url = decoded.toString();
+    }
+
+    checkoutStatus.textContent = yappyProofFile
+      ? 'Envía el mensaje en WhatsApp y adjunta también la captura del pago Yappy.'
+      : 'Envía el mensaje en WhatsApp para que la tienda reciba tu solicitud.';
+
+    // Open WhatsApp
+    location.assign(url);
   } catch (error) {
     checkoutStatus.textContent = error.message || 'No pudimos preparar el pedido. Vuelve a intentarlo.';
   } finally {
     button.disabled = !whatsapp;
   }
 });
+
 payment.addEventListener('change', paymentInstructions);
 byId('checkout-close').addEventListener('click', () => checkout.close());
 
@@ -358,7 +487,7 @@ function renderFilterSummary() {
   if (sort.value !== 'default') selected.push(sort);
   byId('active-filters').hidden = !selected.length;
   byId('filter-chips').replaceChildren(...selected.map((control) => {
-    const label = control === search ? '“' + search.value.trim() + '”' : control.selectedOptions[0].text;
+    const label = control === search ? '"' + search.value.trim() + '"' : control.selectedOptions[0].text;
     const chip = element('button', 'filter-chip', label);
     chip.type = 'button';
     chip.setAttribute('aria-label', 'Quitar ' + label);
@@ -444,6 +573,11 @@ byId('reset-filters').addEventListener('click', resetFilters);
 byId('show-all').addEventListener('click', resetFilters);
 retry.addEventListener('click', loadCatalog);
 
+// Sticky header shadow
+window.addEventListener('scroll', () => {
+  document.querySelector('.site-header').classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
 const theme = byId('theme');
 let themePreference;
 try { themePreference = localStorage.getItem('ba-theme'); } catch {}
@@ -452,6 +586,7 @@ function applyTheme() {
   const dark = themePreference === 'dark';
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   theme.setAttribute('aria-pressed', String(dark));
+  theme.textContent = dark ? '☀' : '◐';
 }
 
 theme.addEventListener('click', () => {

@@ -1,14 +1,14 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Explora el catálogo de Bell Aroma, perfumería en Ciudad de Panamá. Consulta tus fragancias favoritas y visita nuestra tienda.">
-<meta name="theme-color" content="#2a1840">
+<meta name="theme-color" content="#1a0f2e">
 <title>Bell Aroma | Perfumería en Panamá</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/storefront.css">
 <script src="/cart-prices.js" defer></script>
 <script src="/delivery.js" defer></script>
@@ -17,36 +17,55 @@
 </head>
 <body>
 <a class="skip" href="#catalogo">Saltar al catálogo</a>
-<div class="topline"><div class="shell"><span>Perfumería en Ciudad de Panamá</span><a data-contact target="_blank" rel="noopener" hidden>Atención por WhatsApp <span aria-hidden="true">↗</span></a></div></div>
+
+<div class="topline">
+  <div class="shell">
+    <span>✦ Perfumería en Ciudad de Panamá</span>
+    <a data-contact target="_blank" rel="noopener" hidden>Atención por WhatsApp ↗</a>
+  </div>
+</div>
+
 <header class="site-header">
   <div class="shell header-inner">
     <a class="wordmark" href="#inicio">Bell Aroma</a>
     <nav aria-label="Navegación principal">
       <a href="#catalogo">Catálogo</a>
-      <a href="#aroma">Guía de aromas</a>
+      <a href="#aroma">Aromas</a>
       <a href="#visitanos">Visítanos</a>
     </nav>
     <div class="header-actions">
-      <button class="theme-button" id="theme" type="button" aria-label="Tema oscuro" aria-pressed="false" title="Tema oscuro">◐</button>
-      <button class="cart-toggle" id="open-cart" type="button" aria-haspopup="dialog"><span class="bag-icon" aria-hidden="true"></span>Carrito <span id="cart-count">0</span></button>
+      <button class="theme-button" id="theme" type="button" aria-label="Cambiar tema" aria-pressed="false" title="Cambiar tema">◐</button>
+      <button class="cart-toggle" id="open-cart" type="button" aria-haspopup="dialog">
+        <span class="bag-icon" aria-hidden="true"></span>Carrito <span id="cart-count">0</span>
+      </button>
     </div>
   </div>
 </header>
+
 <main id="inicio">
   <section class="shell hero" aria-labelledby="titulo">
     <div class="hero-copy">
       <h1 id="titulo">Un aroma que <em>deja huella.</em></h1>
       <p>Encuentra una fragancia para cada día, una ocasión especial o un regalo que se recuerde.</p>
-      <div class="hero-actions"><a class="button primary" href="#catalogo">Comprar perfumes <span aria-hidden="true">→</span></a><a class="text-action" href="#aroma">Guía de aromas</a></div>
+      <div class="hero-actions">
+        <a class="button primary" href="#catalogo">Comprar perfumes →</a>
+        <a class="text-action" href="#aroma">Guía de aromas</a>
+      </div>
     </div>
     <figure class="hero-photo">
-      <div class="hero-portrait"><img src="/products/village-of-new-york.png" alt="Frasco verde y dorado de Village of New York" width="423" height="530" fetchpriority="high"></div>
+      <div class="hero-portrait">
+        <img src="/products/village-of-new-york.png" alt="Frasco de Village of New York" width="423" height="530" fetchpriority="high">
+      </div>
       <figcaption>Village of New York</figcaption>
     </figure>
   </section>
+
   <section class="shell catalog" id="catalogo" aria-labelledby="catalog-title">
     <div class="section-heading">
-      <div><h2 id="catalog-title">Catálogo de perfumes</h2><p class="muted">Encuentra tu próximo perfume por nombre, marca o familia olfativa.</p></div>
+      <div>
+        <h2 id="catalog-title">Catálogo de perfumes</h2>
+        <p class="muted">Encuentra tu próxima fragancia por nombre, marca o familia olfativa.</p>
+      </div>
       <p id="catalog-status" class="muted" role="status">Cargando catálogo…</p>
     </div>
     <form class="catalog-tools" id="filters" role="search" aria-label="Buscar y filtrar perfumes" hidden>
@@ -62,8 +81,10 @@
         </button>
         <label class="sort-field"><span>Ordenar por</span>
           <select id="sort">
-            <option value="default">Relevancia</option><option value="name">Nombre, A–Z</option>
-            <option value="low">Menor precio</option><option value="high">Mayor precio</option>
+            <option value="default">Relevancia</option>
+            <option value="name">Nombre, A–Z</option>
+            <option value="low">Menor precio</option>
+            <option value="high">Mayor precio</option>
           </select>
         </label>
       </div>
@@ -71,53 +92,96 @@
         <label id="brand-field" hidden>Marca<select id="brand"><option value="">Todas las marcas</option></select></label>
         <label id="family-field" hidden>Familia olfativa<select id="family"><option value="">Todas las familias</option></select></label>
         <label id="price-field" hidden>Precio<select id="price-band">
-          <option value="">Cualquier precio</option><option value="under50">Menos de $50</option>
-          <option value="50to100">$50 a menos de $100</option><option value="100plus">$100 o más</option><option value="ask">Precio a consultar</option>
+          <option value="">Cualquier precio</option>
+          <option value="under50">Menos de $50</option>
+          <option value="50to100">$50 a menos de $100</option>
+          <option value="100plus">$100 o más</option>
+          <option value="ask">Precio a consultar</option>
         </select></label>
         <label>Disponibilidad<select id="availability">
-          <option value="">Cualquiera</option><option value="stock">En existencia</option><option value="ask">Por confirmar</option><option value="out">Agotado</option>
+          <option value="">Cualquiera</option>
+          <option value="stock">En existencia</option>
+          <option value="ask">Por confirmar</option>
+          <option value="out">Agotado</option>
         </select></label>
       </div>
       <div class="active-filters" id="active-filters" aria-label="Selección actual" hidden>
-        <div id="filter-chips"></div><button class="reset-filters" id="reset-filters" type="button">Limpiar todo</button>
+        <div id="filter-chips"></div>
+        <button class="reset-filters" id="reset-filters" type="button">Limpiar todo</button>
       </div>
     </form>
     <button class="button secondary" id="retry" type="button" hidden>Volver a intentar</button>
     <div class="product-grid" id="products"></div>
     <div class="empty-results" id="empty-results" hidden>
-      <h3>No encontramos coincidencias</h3><p>Prueba con otro nombre o quita algún filtro.</p>
+      <h3>No encontramos coincidencias</h3>
+      <p>Prueba con otro nombre o quita algún filtro.</p>
       <button type="button" id="show-all" class="button secondary">Ver todo el catálogo</button>
     </div>
     <noscript><p>Activa JavaScript para explorar el catálogo.</p></noscript>
   </section>
+
   <section class="shell guide" id="aroma" aria-labelledby="guide-title">
-    <div class="guide-copy"><h2 id="guide-title">¿Qué aroma va contigo?</h2><p class="muted">Explora las familias olfativas para saber qué notas buscar.</p></div>
+    <div class="guide-copy">
+      <h2 id="guide-title">¿Qué aroma va contigo?</h2>
+      <p class="muted">Explora las familias olfativas para saber qué notas buscar.</p>
+    </div>
     <div class="families">
-      <details><summary>Floral</summary><p>Busca notas de rosa, jazmín o peonía.</p></details>
-      <details><summary>Cítrico y fresco</summary><p>Busca notas de bergamota, limón o té verde.</p></details>
-      <details><summary>Dulce</summary><p>Busca notas de vainilla, caramelo o haba tonka.</p></details>
-      <details><summary>Amaderado</summary><p>Busca notas de cedro, vetiver o sándalo.</p></details>
-      <details><summary>Ámbar y especiado</summary><p>Busca notas de ámbar, canela o pimienta.</p></details>
+      <details><summary>Floral</summary><p>Busca notas de rosa, jazmín o peonía. Ideal para el día a día y ocasiones especiales.</p></details>
+      <details><summary>Cítrico y fresco</summary><p>Busca notas de bergamota, limón o té verde. Perfectos para el calor panameño.</p></details>
+      <details><summary>Dulce</summary><p>Busca notas de vainilla, caramelo o haba tonka. Para noches especiales.</p></details>
+      <details><summary>Amaderado</summary><p>Busca notas de cedro, vetiver o sándalo. Sofisticados y elegantes.</p></details>
+      <details><summary>Ámbar y especiado</summary><p>Busca notas de ámbar, canela o pimienta. Intensos y memorables.</p></details>
     </div>
   </section>
+
   <section class="shell visit" id="visitanos" aria-labelledby="visit-title">
-    <div><h2 id="visit-title">Pruébalos en tienda</h2><p id="visit-address">Ciudad de Panamá</p><p id="visit-hours" hidden></p></div>
+    <div>
+      <h2 id="visit-title">Pruébalos en tienda</h2>
+      <p id="visit-address">Ciudad de Panamá</p>
+      <p id="visit-hours" hidden></p>
+    </div>
     <div class="actions">
       <a class="button primary" data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Cómo llegar</a>
       <a class="button secondary" data-contact target="_blank" rel="noopener" hidden>Consultar por WhatsApp</a>
     </div>
   </section>
 </main>
+
 <footer class="site-footer">
   <div class="shell footer-grid">
-    <div class="footer-brand"><a class="wordmark" href="#inicio">Bell Aroma</a><p>Perfumería en Ciudad de Panamá</p></div>
-    <div class="footer-group"><h2>Tienda</h2><a href="#catalogo">Comprar perfumes</a><a href="#aroma">Guía de aromas</a><button id="footer-cart" type="button">Mi carrito</button></div>
-    <div class="footer-group"><h2>Contacto</h2><a data-contact hidden target="_blank" rel="noopener">WhatsApp comercial</a><a href="https://www.instagram.com/bell_aroma_oficial" target="_blank" rel="noopener">Instagram</a></div>
-    <div class="footer-group"><h2>Visítanos</h2><p id="footer-address">Ciudad de Panamá</p><p id="footer-hours" hidden></p><a data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Ver ubicación</a></div>
+    <div class="footer-brand">
+      <a class="wordmark" href="#inicio">Bell Aroma</a>
+      <p>Perfumería en Ciudad de Panamá</p>
+    </div>
+    <div class="footer-group">
+      <h2>Tienda</h2>
+      <a href="#catalogo">Comprar perfumes</a>
+      <a href="#aroma">Guía de aromas</a>
+      <button id="footer-cart" type="button">Mi carrito</button>
+    </div>
+    <div class="footer-group">
+      <h2>Contacto</h2>
+      <a data-contact hidden target="_blank" rel="noopener">WhatsApp comercial</a>
+      <a href="https://www.instagram.com/bell_aroma_oficial" target="_blank" rel="noopener">Instagram</a>
+    </div>
+    <div class="footer-group">
+      <h2>Visítanos</h2>
+      <p id="footer-address">Ciudad de Panamá</p>
+      <p id="footer-hours" hidden></p>
+      <a data-store-map href="https://maps.app.goo.gl/NAjTqhjoNM2oH7k16" target="_blank" rel="noopener">Ver ubicación</a>
+    </div>
   </div>
-  <div class="shell footer-base"><small>© <span id="footer-year"></span> Bell Aroma</small><span id="footer-payments"></span></div>
+  <div class="shell footer-base">
+    <small>© <span id="footer-year"></span> Bell Aroma</small>
+    <span id="footer-payments"></span>
+  </div>
 </footer>
-<div class="cart-notice" id="cart-notice" hidden><span role="status" id="notice-text"></span><button type="button" id="notice-open">Ver carrito</button></div>
+
+<div class="cart-notice" id="cart-notice" hidden>
+  <span role="status" id="notice-text"></span>
+  <button type="button" id="notice-open">Ver carrito</button>
+</div>
+
 <dialog id="checkout" aria-labelledby="checkout-title">
   <div class="cart-panel">
     <div class="checkout-heading">
@@ -125,40 +189,65 @@
       <button class="theme-button" id="checkout-close" type="button" aria-label="Cerrar carrito">×</button>
     </div>
     <div id="cart-items"></div>
-    <div class="cart-total" id="cart-total" hidden><strong>Subtotal</strong><strong id="subtotal"></strong></div>
+    <div class="cart-total" id="cart-total" hidden>
+      <strong>Subtotal</strong>
+      <strong id="subtotal"></strong>
+    </div>
     <p class="muted" id="cart-help" role="status"></p>
     <button class="button secondary" id="continue-shopping" type="button">Seguir comprando</button>
     <button class="button primary" id="checkout-next" type="button" hidden>Continuar con la compra</button>
     <button class="text-action" id="edit-cart" type="button" hidden>← Volver al carrito</button>
-  <form id="order-form" hidden>
-    <fieldset class="order-group"><legend>Entrega</legend>
-    <div class="checkout-fields">
-      <label class="wide">Nombre de quien recibe<input name="name" autocomplete="name" maxlength="100" required></label>
-      <div class="region-field">
-        <span id="province-label">Provincia</span>
-        <button type="button" id="order-province" aria-labelledby="province-label order-province" aria-expanded="false" aria-controls="province-options">Elige tu provincia</button>
-        <div class="region-options" id="province-options" role="group" aria-labelledby="province-label" hidden></div>
-      </div>
-      <div class="region-field">
-        <span id="district-label">Distrito</span>
-        <button type="button" id="order-district" aria-labelledby="district-label order-district" aria-expanded="false" aria-controls="district-options" disabled>Elige una provincia primero</button>
-        <div class="region-options" id="district-options" role="group" aria-labelledby="district-label" hidden></div>
-      </div>
-      <div class="wide address-field">
-        <label id="address-label" for="order-address">Dirección de entrega</label>
-        <input id="order-address" name="address" autocomplete="street-address" maxlength="240" required placeholder="Calle, edificio o número de casa">
-        <p class="field-help" id="address-help" role="status"></p>
-      </div>
-      <label class="wide">Punto de referencia (opcional)<input name="reference" maxlength="160"></label>
-    </div></fieldset>
-    <fieldset class="order-group payment-group"><legend>Pago</legend>
-      <label>Método de pago<select id="order-payment" required></select></label>
-      <p class="muted" id="order-payment-help"></p>
-    </fieldset>
-    <p class="muted">Al enviar el pedido, la tienda te contactará por ese mismo chat de WhatsApp.</p>
-    <button class="button primary" id="order-submit" type="submit">Enviar compra por WhatsApp</button>
-    <p id="checkout-status" role="status"></p>
-  </form>
+
+    <form id="order-form" hidden>
+      <fieldset class="order-group">
+        <legend>Entrega</legend>
+        <div class="checkout-fields">
+          <label class="wide">Nombre de quien recibe
+            <input name="name" autocomplete="name" maxlength="100" required placeholder="Nombre completo">
+          </label>
+          <div class="region-field">
+            <span id="province-label">Provincia</span>
+            <button type="button" id="order-province"
+              aria-labelledby="province-label order-province"
+              aria-expanded="false"
+              aria-controls="province-options">Elige tu provincia</button>
+            <div class="region-options" id="province-options" role="group" aria-labelledby="province-label" hidden></div>
+          </div>
+          <div class="region-field">
+            <span id="district-label">Distrito</span>
+            <button type="button" id="order-district"
+              aria-labelledby="district-label order-district"
+              aria-expanded="false"
+              aria-controls="district-options" disabled>Elige una provincia primero</button>
+            <div class="region-options" id="district-options" role="group" aria-labelledby="district-label" hidden></div>
+          </div>
+          <div class="wide address-field">
+            <label id="address-label" for="order-address">Dirección de entrega</label>
+            <input id="order-address" name="address" autocomplete="street-address" maxlength="240" required
+              placeholder="Calle, edificio o número de casa">
+            <p class="field-help" id="address-help" role="status"></p>
+          </div>
+          <label class="wide">Punto de referencia (opcional)
+            <input name="reference" maxlength="160" placeholder="Cerca de…">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="order-group payment-group">
+        <legend>Pago</legend>
+        <label>Método de pago
+          <select id="order-payment" required></select>
+        </label>
+        <p class="muted" id="order-payment-help"></p>
+      </fieldset>
+
+      <!-- Yappy section injected by JS when Yappy is selected -->
+      <div id="yappy-section-wrap" hidden></div>
+
+      <p class="muted" style="font-size:.88rem">Al enviar el pedido, la tienda te contactará por ese mismo chat de WhatsApp.</p>
+      <button class="button primary" id="order-submit" type="submit">Enviar pedido por WhatsApp</button>
+      <p id="checkout-status" role="status"></p>
+    </form>
   </div>
 </dialog>
 </body>

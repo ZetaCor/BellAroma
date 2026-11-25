@@ -40,7 +40,6 @@ function setupCheckoutDelivery(form) {
     });
     panel.addEventListener('click', (event) => {
       if (event.target.matches('input')) {
-        // Native radio groups also fire click when the arrow keys move the selection.
         if (arrowNavigation) return;
         expand(false);
         button.focus();
@@ -87,7 +86,7 @@ function setupCheckoutDelivery(form) {
       if (focused) fallback.focus();
     }
     selection = null;
-    help.textContent = 'Puedes escribir la dirección completa para la entrega.';
+    help.textContent = 'Escribe la dirección completa para la entrega.';
   }
 
   async function mountPlaces() {
